@@ -1,28 +1,22 @@
-# Entorno virtual de Python
+# Entorno virtual
 venv/
 env/
 
-# Archivos de caché de Python
+# Caché de Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
 
-# Configuración de VS Code
+# VS Code
 .vscode/
 
 # Variables de entorno
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
 # Logs
 *.log
 logs/
-
-# Otros
-.DS_Store
-.idea/
-*.swp
-*.swo
