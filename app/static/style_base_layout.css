@@ -1,0 +1,109 @@
+/* Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+/* Reset básico y tipografía */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f4f6f8;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor principal */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ============================= */
+/* LAYOUT PRINCIPAL CON SIDEBAR */
+/* ============================= */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f6f8;
+}
+
+/* Sidebar lateral */
+.sidebar {
+  width: 240px;
+  background-color: #2c3e50;
+  padding: 2rem 1.2rem;
+  color: #ecf0f1;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Botón principal del acordeón */
+.accordion-button {
+  background-color: #34495e;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  text-align: left;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.accordion-button::after {
+  content: '▸';
+  position: absolute;
+  right: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.accordion-item.active .accordion-button::after {
+  transform: rotate(90deg);
+}
+
+.accordion-button:hover {
+  background-color: #3d566e;
+}
+
+/* Contenido desplegable del acordeón */
+.accordion-content {
+  display: none;
+  flex-direction: column;
+  padding-left: 0.75rem;
+  padding-top: 0.3rem;
+  animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.accordion-item.active .accordion-content {
+  display: flex;
+}
+
+/* Links internos del acordeón */
+.accordion-content a {
+  color: #ecf0f1;
+  text-decoration: none;
+  margin: 0.2rem 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, padding-left 0.3s ease;
+}
+
+.accordion-content a:hover {
+  background-color: #2874a6;   /* Color de hover al pasar cursor sobre el link */
+  color: #ffffff;
+  padding-left: 1rem;
+}
+
+/* Contenido principal */
+.main-content {
+  flex: 1;
+  padding: 2.5rem;
+  background-color: #ffffff;
+}

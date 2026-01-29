@@ -1,0 +1,57 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Ingreso" if ingreso else "Nuevo Ingreso" }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', path='style_ingreso_form.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+  <div class="form-card">
+    <h2 class="form-title">
+      <i class="bi bi-{{ 'pencil' if ingreso else 'plus' }}"></i>
+      {{ "Editar Ingreso" if ingreso else "Nuevo Ingreso" }}
+    </h2>
+
+    <form method="post" action="/ingresos/guardar">
+      {% if ingreso %}
+        <input type="hidden" name="id" value="{{ ingreso.id }}">
+      {% endif %}
+
+      <!-- Valor -->
+      <div class="form-group">
+        <label for="valor"><i class="bi bi-currency-dollar"></i> Valor</label>
+        <input type="number" name="valor" id="valor" step="0.01" min="0" value="{{ ingreso.valor if ingreso else '' }}" required>
+      </div>
+
+      <!-- En ingreso_form.html -->
+    <div class="form-group">
+      <label for="categoria"><i class="bi bi-tag"></i> Categoría</label>
+      <input type="text" name="categoria" id="categoria" value="Ingresos" required>
+    </div>
+
+      <!-- Fecha -->
+      <div class="form-group">
+        <label for="fecha"><i class="bi bi-calendar"></i> Fecha</label>
+        <input type="date" name="fecha" id="fecha" value="{{ ingreso.fecha if ingreso else '' }}" required>
+      </div>
+
+      <!-- Notas -->
+      <div class="form-group full-width">
+        <label for="notas"><i class="bi bi-card-text"></i> Notas</label>
+        <textarea name="notas" id="notas" rows="3">{{ ingreso.notas if ingreso else '' }}</textarea>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <button type="submit" class="btn-guardar">
+          <i class="bi bi-save"></i> {{ "Actualizar" if ingreso else "Guardar" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

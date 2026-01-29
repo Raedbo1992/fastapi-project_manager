@@ -1,0 +1,299 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Contraseña" if contrasena else "Nueva Contraseña" }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='style_contrasenas_form.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<style>
+    .password-strength {
+        margin-top: 5px;
+        height: 5px;
+        background: #eee;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease, background 0.3s ease;
+    }
+    
+    .strength-weak { background: #e74c3c; width: 25%; }
+    .strength-medium { background: #f39c12; width: 50%; }
+    .strength-good { background: #3498db; width: 75%; }
+    .strength-strong { background: #2ecc71; width: 100%; }
+    
+    .strength-text {
+        font-size: 0.8rem;
+        margin-top: 3px;
+        text-align: right;
+    }
+    
+    .password-match {
+        font-size: 0.8rem;
+        margin-top: 3px;
+        text-align: right;
+    }
+    
+    .match-valid { color: #2ecc71; }
+    .match-invalid { color: #e74c3c; }
+    
+    .password-field {
+        position: relative;
+    }
+    
+    .password-buttons {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding-right: 10px;
+    }
+    
+    .password-buttons button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #666;
+        padding: 5px;
+    }
+    
+    .password-buttons button:hover {
+        color: #3498db;
+    }
+</style>
+<script>
+    function togglePassword(fieldId, iconId) {
+        const passwordField = document.getElementById(fieldId);
+        const toggleIcon = document.getElementById(iconId);
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    }
+    
+    function generatePassword() {
+        const length = 16;
+        const lowercase = "abcdefghijklmnopqrstuvwxyz";
+        const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const numbers = "0123456789";
+        const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+        
+        let password = "";
+        
+        // Aseguramos que la contraseña tenga al menos un carácter de cada tipo
+        password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
+        password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
+        password += numbers.charAt(Math.floor(Math.random() * numbers.length));
+        password += symbols.charAt(Math.floor(Math.random() * symbols.length));
+        
+        // Completamos el resto de la longitud
+        const allChars = lowercase + uppercase + numbers + symbols;
+        for (let i = 4; i < length; i++) {
+            password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+        }
+        
+        // Mezclamos la contraseña
+        password = password.split('').sort(() => Math.random() - 0.5).join('');
+        
+        // Asignamos a ambos campos
+        document.getElementById('contrasena').value = password;
+        document.getElementById('repeat_contrasena').value = password;
+        
+        // Actualizamos la validación
+        checkPasswordStrength();
+        checkPasswordMatch();
+    }
+    
+    function checkPasswordStrength() {
+        const password = document.getElementById('contrasena').value;
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+        
+        let strength = 0;
+        let text = '';
+        let className = '';
+        
+        if (password.length === 0) {
+            strength = 0;
+            text = '';
+        } else if (password.length < 6) {
+            strength = 1;
+            text = 'Muy débil';
+            className = 'strength-weak';
+        } else {
+            // Verificar criterios de fortaleza
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            switch(strength) {
+                case 1:
+                case 2:
+                    text = 'Débil';
+                    className = 'strength-weak';
+                    break;
+                case 3:
+                    text = 'Media';
+                    className = 'strength-medium';
+                    break;
+                case 4:
+                    text = 'Buena';
+                    className = 'strength-good';
+                    break;
+                case 5:
+                    text = 'Fuerte';
+                    className = 'strength-strong';
+                    break;
+            }
+        }
+        
+        strengthBar.className = 'password-strength-bar ' + className;
+        strengthText.textContent = text;
+        strengthText.className = 'strength-text ' + (text ? className.replace('strength-', 'text-') : '');
+    }
+    
+    function checkPasswordMatch() {
+        const password = document.getElementById('contrasena').value;
+        const repeatPassword = document.getElementById('repeat_contrasena').value;
+        const matchText = document.getElementById('password-match-text');
+        
+        if (!repeatPassword) {
+            matchText.textContent = '';
+            matchText.className = 'password-match';
+        } else if (password === repeatPassword) {
+            matchText.textContent = '✓ Las contraseñas coinciden';
+            matchText.className = 'password-match match-valid';
+        } else {
+            matchText.textContent = '✗ Las contraseñas no coinciden';
+            matchText.className = 'password-match match-invalid';
+        }
+    }
+    
+    function validateForm() {
+        const password = document.getElementById('contrasena').value;
+        const repeatPassword = document.getElementById('repeat_contrasena').value;
+        
+        if (password !== repeatPassword) {
+            alert('Las contraseñas no coinciden. Por favor, verifica.');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Inicializar eventos cuando el documento esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('contrasena').addEventListener('input', function() {
+            checkPasswordStrength();
+            checkPasswordMatch();
+        });
+        
+        document.getElementById('repeat_contrasena').addEventListener('input', checkPasswordMatch);
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-card">
+        <h2 class="form-title">
+            <i class="bi bi-{{ 'pencil' if contrasena else 'plus' }}"></i>
+            {{ "Editar Contraseña" if contrasena else "Nueva Contraseña" }}
+        </h2>
+        
+        <form method="post" action="/contrasenas/guardar" onsubmit="return validateForm()">
+            {% if contrasena %}
+            <input type="hidden" name="id" value="{{ contrasena.id }}">
+            {% endif %}
+            
+            <!-- Servicio -->
+            <div class="form-group">
+                <label for="servicio"><i class="bi bi-building"></i> Servicio</label>
+                <input type="text" name="servicio" id="servicio" 
+                       value="{{ contrasena.servicio if contrasena else '' }}" required>
+            </div>
+            
+            <!-- Usuario/Email -->
+            <div class="form-group">
+                <label for="usuario"><i class="bi bi-person"></i> Usuario/Email</label>
+                <input type="text" name="usuario" id="usuario" 
+                       value="{{ contrasena.usuario if contrasena else '' }}" required>
+            </div>
+            
+            <!-- Contraseña -->
+            <div class="form-group">
+                <label for="contrasena"><i class="bi bi-key"></i> Contraseña</label>
+                <div class="password-field">
+                    <input type="password" name="contrasena" id="contrasena" 
+                           value="" required
+                           placeholder="Ingresa tu contraseña">
+                    <div class="password-buttons">
+                        <button type="button" onclick="togglePassword('contrasena', 'toggle-icon')">
+                            <i id="toggle-icon" class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" onclick="generatePassword()">
+                            <i class="bi bi-shuffle"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="password-strength">
+                    <div id="password-strength-bar" class="password-strength-bar"></div>
+                </div>
+                <div id="password-strength-text" class="strength-text"></div>
+            </div>
+            
+            <!-- Repetir Contraseña -->
+            <div class="form-group">
+                <label for="repeat_contrasena"><i class="bi bi-key-fill"></i> Repetir Contraseña</label>
+                <div class="password-field">
+                    <input type="password" name="repeat_contrasena" id="repeat_contrasena" 
+                           value="" required
+                           placeholder="Repite tu contraseña">
+                    <div class="password-buttons">
+                        <button type="button" onclick="togglePassword('repeat_contrasena', 'repeat-toggle-icon')">
+                            <i id="repeat-toggle-icon" class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="password-match-text" class="password-match"></div>
+            </div>
+            
+            <!-- URL -->
+            <div class="form-group">
+                <label for="url"><i class="bi bi-link"></i> URL</label>
+                <input type="url" name="url" id="url" 
+                       value="{{ contrasena.url if contrasena else '' }}" 
+                       placeholder="https://ejemplo.com">
+            </div>
+            
+            <!-- Notas -->
+            <div class="form-group full-width">
+                <label for="notas"><i class="bi bi-card-text"></i> Notas</label>
+                <textarea name="notas" id="notas" rows="3" placeholder="Notas adicionales sobre esta contraseña">{{ contrasena.notas if contrasena else '' }}</textarea>
+            </div>
+            
+            <!-- Botones -->
+            <div class="form-actions">
+
+                <button type="submit" class="btn-guardar">
+                    <i class="bi bi-save"></i> {{ "Actualizar" if contrasena else "Guardar" }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

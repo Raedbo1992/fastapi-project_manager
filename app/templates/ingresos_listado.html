@@ -1,0 +1,185 @@
+{% extends "base_layout.html" %}
+
+{% block title %}📋 Mis Ingresos{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='style_ingresos_listado.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+{% endblock %}
+
+{% block content %}
+<div class="ingresos-header">
+  <h2><i class="bi bi-cash-stack"></i> Mis Ingresos</h2>
+  <a href="/ingresos/nuevo" class="btn-nuevo">
+    <i class="bi bi-plus-circle"></i> Nuevo Ingreso
+  </a>
+</div>
+
+<!-- Filtros -->
+<div class="filtros-container">
+  <form method="get" action="/ingresos" class="filtros-form">
+    
+    <!-- Filtro Tipo -->
+    <div class="filtro-item">
+      <i class="bi bi-funnel"></i>
+      <select name="tipo" onchange="this.form.submit()">
+        <option value="">Todos los tipos</option>
+        <option value="fijo" {% if filtro_tipo=='fijo' %}selected{% endif %}>Fijos</option>
+        <option value="variable" {% if filtro_tipo=='variable' %}selected{% endif %}>Variables</option>
+        <option value="opcional" {% if filtro_tipo=='opcional' %}selected{% endif %}>Opcionales</option>
+      </select>
+    </div>
+
+    <!-- Filtro Estado -->
+    <div class="filtro-item">
+      <i class="bi bi-check2-circle"></i>
+      <select name="pagado" onchange="this.form.submit()">
+        <option value="">Todos los estados</option>
+        <option value="true" {% if filtro_pagado==True %}selected{% endif %}>Pagados</option>
+        <option value="false" {% if filtro_pagado==False %}selected{% endif %}>Pendientes</option>
+      </select>
+    </div>
+
+  </form>
+</div>
+
+
+<div class="tabla-scroll">
+  <table class="tabla-ingresos">
+    <thead>
+      <tr>
+        <th>Categoría</th>
+        <th>Valor</th>
+        <th>Estado</th>
+        <th>Notas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ingreso in ingresos %}
+      <tr class="{% if ingreso.pagado %}pagado{% else %}pendiente{% endif %}">
+        <td>
+          {{ ingreso.categoria.nombre }}
+          <span class="tipo-badge {{ ingreso.categoria.tipo }}">
+            {{ ingreso.categoria.tipo }}
+          </span>
+        </td>
+        <td>${{ "{:,.0f}".format(ingreso.valor) }}</td>
+        <td>
+          <span class="estado-badge {% if ingreso.pagado %}pagado{% else %}pendiente{% endif %}">
+            {% if ingreso.pagado %}Pagado{% else %}Pendiente{% endif %}
+          </span>
+        </td>
+        <td>{{ ingreso.notas or '-' }}</td>
+        <td class="acciones">
+          <a href="/ingresos/editar/{{ ingreso.id }}" class="btn-icon edit">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <a href="/ingresos/eliminar/{{ ingreso.id }}" 
+             class="btn-icon delete eliminar-btn" 
+             data-id="{{ ingreso.id }}">
+            <i class="bi bi-trash"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ... (código existente) -->
+
+<!-- Paginación Mejorada -->
+{% if total_pages > 1 %}
+<div class="paginacion">
+    <!-- Botón Anterior -->
+    <a href="?page={% if current_page > 1 %}{{ current_page - 1 }}{% else %}1{% endif %}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_pagado is not none %}&pagado={{ filtro_pagado }}{% endif %}" 
+       class="pag-btn {% if current_page == 1 %}disabled{% endif %}"
+       {% if current_page == 1 %}aria-disabled="true"{% endif %}>
+        <i class="bi bi-chevron-left"></i>
+    </a>
+
+    <!-- Página 1 siempre visible -->
+    <a href="?page=1{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_pagado is not none %}&pagado={{ filtro_pagado }}{% endif %}" 
+       class="pag-btn {% if current_page == 1 %}active{% endif %}">
+        1
+    </a>
+
+    <!-- Puntos suspensivos si hay muchas páginas -->
+    {% if current_page > 3 %}
+    <span class="pag-btn disabled">...</span>
+    {% endif %}
+
+    <!-- Páginas alrededor de la actual -->
+    {% for p in range([2, current_page-1]|max, [current_page+2, total_pages]|min) %}
+        <a href="?page={{ p }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_pagado is not none %}&pagado={{ filtro_pagado }}{% endif %}" 
+           class="pag-btn {% if p == current_page %}active{% endif %}">
+            {{ p }}
+        </a>
+    {% endfor %}
+
+    <!-- Puntos suspensivos finales si es necesario -->
+    {% if current_page < total_pages - 2 %}
+    <span class="pag-btn disabled">...</span>
+    {% endif %}
+
+    <!-- Última página siempre visible -->
+    {% if total_pages > 1 %}
+    <a href="?page={{ total_pages }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_pagado is not none %}&pagado={{ filtro_pagado }}{% endif %}" 
+       class="pag-btn {% if current_page == total_pages %}active{% endif %}">
+        {{ total_pages }}
+    </a>
+    {% endif %}
+
+    <!-- Botón Siguiente -->
+    <a href="?page={% if current_page < total_pages %}{{ current_page + 1 }}{% else %}{{ total_pages }}{% endif %}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if filtro_pagado is not none %}&pagado={{ filtro_pagado }}{% endif %}" 
+       class="pag-btn {% if current_page == total_pages %}disabled{% endif %}"
+       {% if current_page == total_pages %}aria-disabled="true"{% endif %}>
+        <i class="bi bi-chevron-right"></i>
+    </a>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".eliminar-btn").forEach(function(btn) {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const gastoId = btn.dataset.id;
+      Swal.fire({
+        title: '¿Eliminar ingreso?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = `/ingresos/eliminar/${gastoId}`;
+        }
+      });
+    });
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  {% if mensaje %}
+    Swal.fire({
+      title: '{{ mensaje.titulo }}',
+      text: '{{ mensaje.texto }}',
+      icon: '{{ mensaje.tipo }}',
+      confirmButtonColor: '#3085d6'
+    });
+  {% endif %}
+});
+</script>
+{% endblock %}

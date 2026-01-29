@@ -1,0 +1,86 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Pendiente" if pendiente else "Nuevo Pendiente" }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', path='style_pendiente_form.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+{% if request.session.get('mensaje') %}
+  <script>
+    Swal.fire({
+      icon: "{{ 'success' if request.session['mensaje']['tipo'] == 'exito' else 'error' }}",
+      title: "{{ request.session['mensaje']['titulo'] }}",
+      text: "{{ request.session['mensaje']['texto'] }}",
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'Aceptar'
+    });
+  </script>
+  {% set _ = request.session.pop('mensaje') %}
+{% endif %}
+
+<div class="form-container">
+  <h2 class="form-title">{{ "Editar Pendiente" if pendiente else "Crear Nuevo Pendiente" }}</h2>
+
+  <form method="post" action="/pendientes/guardar">
+    {% if pendiente %}
+      <input type="hidden" name="id" value="{{ pendiente.id }}">
+    {% endif %}
+
+    <div class="form-row">
+      <div class="form-col full">
+        <label><i class="bi bi-pencil me-1"></i> Título:</label>
+        <input type="text" name="titulo" value="{{ pendiente.titulo if pendiente else '' }}" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col full">
+        <label><i class="bi bi-card-text me-1"></i> Descripción:</label>
+        <textarea name="descripcion">{{ pendiente.descripcion if pendiente else '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col">
+        <label><i class="bi bi-toggle-on me-1"></i> Estado:</label>
+        <select name="estado" required>
+          {% for e in ['pendiente', 'en_progreso', 'completado', 'cancelado'] %}
+            <option value="{{ e }}" {% if pendiente and pendiente.estado == e %}selected{% endif %}>{{ e|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-col">
+        <label><i class="bi bi-exclamation-triangle me-1"></i> Prioridad:</label>
+        <select name="prioridad" required>
+          {% for p in ['urgente', 'alta', 'media', 'baja'] %}
+            <option value="{{ p }}" {% if pendiente and pendiente.prioridad == p %}selected{% endif %}>{{ p|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col">
+        <label><i class="bi bi-clock me-1"></i> Fecha límite:</label>
+        <input type="datetime-local" name="fecha_limite" value="{{ pendiente.fecha_limite.strftime('%Y-%m-%dT%H:%M') if pendiente and pendiente.fecha_limite else '' }}">
+      </div>
+      <div class="form-col">
+        <label><i class="bi bi-bell me-1"></i> Recordatorio:</label>
+        <input type="datetime-local" name="recordatorio" value="{{ pendiente.recordatorio.strftime('%Y-%m-%dT%H:%M') if pendiente and pendiente.recordatorio else '' }}">
+      </div>
+    </div>
+
+
+
+    <div class="form-row center">
+      <button type="submit" class="btn-submit">
+         <i class="bi bi-save"></i> {% if pendiente %}Actualizar{% else %}Crear{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

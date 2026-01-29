@@ -1,0 +1,126 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Cumpleaños" if cumpleano else "Nuevo Cumpleaños" }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', path='style_cumpleanos_form.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+  <div class="form-card">
+    <h2 class="form-title">
+      <i class="bi bi-{{ 'pencil' if cumpleano else 'cake2' }}"></i>
+      {{ "Editar Cumpleaños" if cumpleano else "Nuevo Cumpleaños" }}
+    </h2>
+
+    <form method="post" action="/cumpleanos/guardar">
+      {% if cumpleano %}
+        <input type="hidden" name="id" value="{{ cumpleano.id }}">
+      {% endif %}
+
+      <!-- Nombre de la Persona -->
+      <div class="form-group">
+        <label for="nombre_persona"><i class="bi bi-person-fill"></i> Nombre Completo</label>
+        <input type="text" name="nombre_persona" id="nombre_persona" 
+               value="{{ cumpleano.nombre_persona if cumpleano else '' }}" 
+               placeholder="Ej: Juan Pérez" required>
+      </div>
+
+      <!-- Fecha de Nacimiento -->
+      <div class="form-group">
+        <label for="fecha_nacimiento"><i class="bi bi-calendar-event"></i> Fecha de Nacimiento</label>
+        <input type="date" name="fecha_nacimiento" id="fecha_nacimiento" 
+               value="{{ cumpleano.fecha_nacimiento if cumpleano else '' }}" required>
+      </div>
+
+      <!-- Relación -->
+      <div class="form-group">
+        <label for="relacion"><i class="bi bi-people"></i> Relación</label>
+        <select name="relacion" id="relacion">
+          <option value="">Seleccionar...</option>
+          <option value="Familia" {% if cumpleano and cumpleano.relacion == 'Familia' %}selected{% endif %}>Familia</option>
+          <option value="Amigo" {% if cumpleano and cumpleano.relacion == 'Amigo' %}selected{% endif %}>Amigo</option>
+          <option value="Trabajo" {% if cumpleano and cumpleano.relacion == 'Trabajo' %}selected{% endif %}>Trabajo</option>
+          <option value="Pareja" {% if cumpleano and cumpleano.relacion == 'Pareja' %}selected{% endif %}>Pareja</option>
+          <option value="Otro" {% if cumpleano and cumpleano.relacion == 'Otro' %}selected{% endif %}>Otro</option>
+        </select>
+      </div>
+
+      <!-- Días de Notificación -->
+      <div class="form-group">
+        <label for="notificar_dias_antes"><i class="bi bi-bell"></i> Notificar con anticipación</label>
+        <select name="notificar_dias_antes" id="notificar_dias_antes">
+          <option value="1" {% if cumpleano and cumpleano.notificar_dias_antes == 1 %}selected{% endif %}>1 día antes</option>
+          <option value="3" {% if cumpleano and cumpleano.notificar_dias_antes == 3 %}selected{% endif %}>3 días antes</option>
+          <option value="7" {% if cumpleano and cumpleano.notificar_dias_antes == 7 %}selected{% elif not cumpleano %}selected{% endif %}>7 días antes</option>
+          <option value="15" {% if cumpleano and cumpleano.notificar_dias_antes == 15 %}selected{% endif %}>15 días antes</option>
+          <option value="30" {% if cumpleano and cumpleano.notificar_dias_antes == 30 %}selected{% endif %}>30 días antes</option>
+        </select>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="form-group">
+        <label for="telefono"><i class="bi bi-phone"></i> Teléfono</label>
+        <input type="tel" name="telefono" id="telefono" 
+               value="{{ cumpleano.telefono if cumpleano else '' }}" 
+               placeholder="Ej: 300 123 4567">
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email"><i class="bi bi-envelope"></i> Correo Electrónico</label>
+        <input type="email" name="email" id="email" 
+               value="{{ cumpleano.email if cumpleano else '' }}" 
+               placeholder="ejemplo@correo.com">
+      </div>
+
+      <!-- Notas -->
+      <div class="form-group full-width">
+        <label for="notas"><i class="bi bi-card-text"></i> Notas / Ideas de Regalo</label>
+        <textarea name="notas" id="notas" rows="3" 
+                  placeholder="Ideas de regalo, preferencias, etc.">{{ cumpleano.notas if cumpleano else '' }}</textarea>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <a href="/cumpleanos" class="btn-cancelar">
+          <i class="bi bi-x-circle"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-guardar">
+          <i class="bi bi-save"></i> {{ "Actualizar" if cumpleano else "Guardar" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Mostrar la edad que cumplirá al seleccionar fecha
+document.getElementById('fecha_nacimiento').addEventListener('change', function() {
+  const fechaNac = new Date(this.value);
+  const hoy = new Date();
+  let edad = hoy.getFullYear() - fechaNac.getFullYear();
+  
+  // Ajustar si aún no ha cumplido años este año
+  if (hoy.getMonth() < fechaNac.getMonth() || 
+      (hoy.getMonth() === fechaNac.getMonth() && hoy.getDate() < fechaNac.getDate())) {
+    edad--;
+  }
+  
+  if (edad >= 0 && edad < 150) {
+    const label = document.querySelector('label[for="fecha_nacimiento"]');
+    label.innerHTML = `<i class="bi bi-calendar-event"></i> Fecha de Nacimiento <span style="color: #28a745; font-weight: 600;">(Cumplirá ${edad + 1} años)</span>`;
+  }
+});
+
+// Ejecutar al cargar si hay fecha
+window.addEventListener('DOMContentLoaded', function() {
+  const fechaInput = document.getElementById('fecha_nacimiento');
+  if (fechaInput.value) {
+    fechaInput.dispatchEvent(new Event('change'));
+  }
+});
+</script>
+{% endblock %}

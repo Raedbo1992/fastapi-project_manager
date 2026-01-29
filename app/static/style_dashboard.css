@@ -1,0 +1,250 @@
+/* ============================= */
+/* DASHBOARD GENERAL */
+/* ============================= */
+
+.dashboard {
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Encabezado del dashboard */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between; /* Título a la izq. - saludo a la der. */
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.dashboard-subtitle {
+  font-size: 1.2rem;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+th svg,
+h2 svg,
+.dashboard-subtitle svg {
+  margin-right: 6px;
+  vertical-align: middle;
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+/* ============================= */
+/* LAYOUT PRINCIPAL CON SIDEBAR */
+/* ============================= */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f6f8;
+}
+
+/* Sidebar lateral */
+.sidebar {
+  width: 240px;
+  background-color: #2c3e50;
+  padding: 2rem 1.2rem;
+  color: #ecf0f1;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Botón principal del acordeón */
+.accordion-button {
+  background-color: #34495e;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  text-align: left;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.accordion-button::after {
+  content: '▸';
+  position: absolute;
+  right: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.accordion-item.active .accordion-button::after {
+  transform: rotate(90deg);
+}
+
+.accordion-button:hover {
+  background-color: #3d566e;
+}
+
+/* Contenido desplegable del acordeón */
+.accordion-content {
+  display: none;
+  flex-direction: column;
+  padding-left: 0.75rem;
+  padding-top: 0.3rem;
+  animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.accordion-item.active .accordion-content {
+  display: flex;
+}
+
+/* Links internos del acordeón */
+.accordion-content a {
+  color: #ecf0f1;
+  text-decoration: none;
+  margin: 0.2rem 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, padding-left 0.3s ease;
+}
+
+.accordion-content a:hover {
+  background-color: #2874a6;   /* Color de hover al pasar cursor sobre el link */
+  color: #ffffff;
+  padding-left: 1rem;
+}
+
+/* Contenido principal */
+.main-content {
+  flex: 1;
+  padding: 2.5rem;
+  background-color: #ffffff;
+}
+
+/* ============================= */
+/* TABLAS */
+/* ============================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+th {
+  background-color: #1565c0;
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+}
+
+td {
+  padding: 12px 15px;
+  color: #333;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* ============================= */
+/* BLOQUES PRINCIPALES DEL DASHBOARD */
+/* ============================= */
+
+/* Grid principal con tres bloques: resumen + 2 gráficos */
+.bloques-dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.bloque {
+  background: #fff;
+  padding: 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* Tarjetas de resumen */
+.resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.resumen-card {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0px 1px 4px rgba(0,0,0,0.05);
+}
+
+.resumen-card h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.resumen-card p {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.resumen-card.ingresos { border-left: 5px solid #4CAF50; }
+.resumen-card.gastos { border-left: 5px solid #F44336; }
+.resumen-card.saldo { border-left: 5px solid #2196F3; }
+
+/* ============================= */
+/* GRÁFICOS */
+/* ============================= */
+
+.grafico-container {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
+  max-width: 320px; 
+  flex: 1;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.grafico-container h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.grafico-container canvas {
+  max-width: 280px;
+  max-height: 280px;
+}
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 900px) {
+  .bloques-dashboard {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,266 @@
+/* ==========================================================================
+   Layout principal con sidebar tipo acordeón
+   ========================================================================== */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f4f6f8;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background-color: #2c3e50;
+  padding: 2rem 1.2rem;
+  color: #ecf0f1;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Botones del acordeón */
+.accordion-button {
+  background-color: #34495e;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  text-align: left;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.accordion-button::after {
+  content: '▸';
+  position: absolute;
+  right: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.accordion-item.active .accordion-button::after {
+  transform: rotate(90deg);
+}
+
+/* Hover del botón */
+.accordion-button:hover {
+  background-color: #3d566e;
+}
+
+/* Contenido desplegable */
+.accordion-content {
+  display: none;
+  flex-direction: column;
+  padding-left: 0.75rem;
+  padding-top: 0.3rem;
+  animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accordion-item.active .accordion-content {
+  display: flex;
+}
+
+/* Enlaces internos del acordeón */
+.accordion-content a {
+  color: #ecf0f1;
+  text-decoration: none;
+  margin: 0.2rem 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, padding-left 0.3s ease;
+}
+
+.accordion-content a:hover {
+  background-color: #1abc9c;
+  color: #ffffff;
+  padding-left: 1rem;
+}
+
+/* Contenido principal */
+.main-content {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: #ffffff;
+}
+
+/* ==========================================================================
+   Tarjeta del formulario
+   ========================================================================== */
+
+.form-card {
+  background-color: #ffffff;
+  padding: 1.2rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  max-width: 780px;
+  margin: 1rem auto;
+}
+
+/* ==========================================================================
+   Título del formulario
+   ========================================================================== */
+
+.form-title {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #222;
+}
+
+/* ==========================================================================
+   Divisores de sección del formulario
+   ========================================================================== */
+
+.section-divider {
+  grid-column: span 2;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #007bff;
+  margin: 0.6rem 0 0.3rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* ==========================================================================
+   Estilo de etiquetas y campos
+   ========================================================================== */
+
+form label {
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0.2rem;
+  display: block;
+}
+
+form input,
+form select,
+form textarea {
+  width: 100%;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+form textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+/* ==========================================================================
+   Botón de envío
+   ========================================================================== */
+
+button[type="submit"],
+button.submit-btn {
+  margin-top: 0.6rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 123, 255, 0.3);
+}
+
+/* ==========================================================================
+   Diseño responsivo del formulario
+   ========================================================================== */
+
+@media (min-width: 600px) {
+  form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 0.7rem;
+    row-gap: 0.5rem;
+  }
+
+  .section-divider {
+    grid-column: span 2;
+  }
+
+  button.submit-btn {
+    grid-column: span 2;
+    justify-self: center;
+  }
+}
+
+
+/* Botón de guardar */
+.form-actions {
+  margin-top: 1rem; /* separa del campo anterior */
+  display: flex;
+  justify-content: center; /* centra horizontalmente */
+}
+
+.form-actions .btn-guardar {
+  background: linear-gradient(135deg, #0f0f14, #2a2f5a);
+  color: #ffffff;
+  padding: 0.65rem 1.6rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  transition: 
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+/* Hover */
+.form-actions .btn-guardar:hover {
+  background: linear-gradient(135deg, #1b1f3b, #3a3fa0);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+}
+
+/* Active */
+.form-actions .btn-guardar:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+
+
+.checkbox-group {
+  display: flex;
+  align-items: center; /* Centra verticalmente */
+  gap: 8px;            /* Espacio entre texto e input */
+}
+
+.checkbox-group label {
+  margin: 0;           /* Quita márgenes por defecto */
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #28a745; /* Color verde moderno */
+}

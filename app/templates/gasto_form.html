@@ -1,0 +1,97 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Gasto" if gasto else "Nuevo Gasto" }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', path='style_gasto_form.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+  <div class="form-card">
+    <h2 class="form-title">
+      <i class="bi bi-{{ 'pencil' if gasto else 'plus' }}"></i>
+      {{ "Editar Gasto" if gasto else "Nuevo Gasto" }}
+    </h2>
+
+    <form method="post" action="/gastos/guardar">
+      {% if gasto %}
+        <input type="hidden" name="id" value="{{ gasto.id }}">
+      {% endif %}
+
+<form method="post" action="/gastos/guardar">
+  {% if gasto %}
+    <input type="hidden" name="id" value="{{ gasto.id }}">
+  {% endif %}
+
+  <!-- Categoría -->
+<div class="form-group">
+  <label for="categoria_nombre"><i class="bi bi-tag"></i> Categoría</label>
+  <input list="categorias_list" name="categoria_nombre" id="categoria_nombre"
+        value="{{ gasto.categoria.nombre if gasto else '' }}" required>
+  <datalist id="categorias_list">
+    {% for categoria in categorias %}
+      <option value="{{ categoria.nombre }}"></option>
+    {% endfor %}
+  </datalist>
+</div>
+
+
+
+
+      <!-- Valor -->
+      <div class="form-group">
+        <label for="valor"><i class="bi bi-currency-dollar"></i> Valor</label>
+        <input type="number" name="valor" id="valor" step="0.01" min="0" value="{{ gasto.valor if gasto else '' }}" required>
+      </div>
+
+      <!-- Fecha límite -->
+      <div class="form-group">
+        <label for="fecha_limite"><i class="bi bi-calendar"></i> Fecha límite</label>
+        <input type="date" name="fecha_limite" id="fecha_limite" value="{{ gasto.fecha_limite if gasto and gasto.fecha_limite else '' }}">
+      </div>
+
+      <!-- Pagado -->
+      <div class="form-group checkbox-group">
+        <label for="pagado">
+          <i class="bi bi-check-circle"></i> ¿Pagado?
+        </label>
+        <input type="checkbox" name="pagado" id="pagado" {% if gasto and gasto.pagado %}checked{% endif %}>
+      </div>
+
+
+
+      <!-- Notas -->
+      <div class="form-group full-width">
+        <label for="notas"><i class="bi bi-card-text"></i> Notas</label>
+        <textarea name="notas" id="notas" rows="3">{{ gasto.notas if gasto else '' }}</textarea>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">  
+        <button type="submit" class="btn-guardar">
+          <i class="bi bi-save"></i> {{ "Actualizar" if gasto else "Guardar" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  {% if mensaje %}
+    Swal.fire({
+      title: '{{ mensaje.titulo }}',
+      text: '{{ mensaje.texto }}',
+      icon: '{{ mensaje.tipo }}',
+      confirmButtonColor: '#3085d6'
+    });
+  {% endif %}
+});
+</script>
+
+
+{% endblock %}

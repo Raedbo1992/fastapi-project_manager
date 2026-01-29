@@ -1,0 +1,371 @@
+/* =========================
+   Contenido principal
+   ========================= */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  background-color: #f4f6f8;
+}
+
+/* =========================
+   Cabecera sección
+   ========================= */
+.cumpleanos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.cumpleanos-header h2 {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.cumpleanos-header h2 i {
+  color: #2c3e50;
+}
+
+/* Botón nuevo */
+.btn-nuevo,
+.form-actions .btn-guardar {
+  background: linear-gradient(135deg, #0f0f14, #2a2f5a);
+  color: #ffffff;
+  padding: 0.65rem 1.6rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: 
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+
+/* Hover */
+.btn-nuevo:hover,
+.form-actions .btn-guardar:hover {
+  background: linear-gradient(135deg, #1b1f3b, #3a3fa0);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+}
+
+/* Active */
+.btn-nuevo:active,
+.form-actions .btn-guardar:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+/* =========================
+   Filtros
+   ========================= */
+.filtros-container {
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.filtros-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.filtro-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.filtro-item i { 
+  color: #2c3e50; 
+  font-size: 1rem; 
+  flex-shrink: 0;
+}
+
+.filtro-item select {
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  color: #495057;
+}
+
+/* =========================
+   Tabla
+   ========================= */
+.tabla-scroll { 
+  overflow-x: auto; 
+  width: 100%; 
+  margin-bottom: 1rem;
+}
+
+.tabla-cumpleanos {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.tabla-cumpleanos thead { 
+  background: linear-gradient(135deg, #2c3e50, #495057);
+  color: white; 
+}
+
+.tabla-cumpleanos th, 
+.tabla-cumpleanos td {
+  padding: 12px 15px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid #eee;
+}
+
+
+.tabla-cumpleanos th {
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+}
+
+
+
+.tabla-cumpleanos tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.tabla-cumpleanos tbody tr:hover { 
+  background-color: #fff5f9; 
+}
+
+.tabla-cumpleanos tbody tr.proximo {
+  background-color: #fff9e6;
+}
+
+/* =========================
+   Contenido de celdas color icono persona
+   ========================= */
+.persona-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.persona-info i {
+  font-size: 1.5rem;
+  color: #3763b6;    
+}
+
+.contacto-info {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.contacto-info div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.contacto-info i {
+  color: #ff69b4;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   Badges
+   ========================= */
+.dias-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.dias-badge.hoy {
+  background: linear-gradient(135deg, #ff69b4, #ff1493);
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+
+.dias-badge.proximo {
+  background: #fff3cd;
+  color: #856404;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.relacion-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.relacion-badge.familia {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.relacion-badge.amigo {
+  background: #d4edda;
+  color: #155724;
+}
+
+.relacion-badge.trabajo {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.relacion-badge.pareja {
+  background: #fce4ec;
+  color: #880e4f;
+}
+
+.relacion-badge.otro {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+/* =========================
+   Acciones
+   ========================= */
+.acciones {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-icon { 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  width: 34px; 
+  height: 34px; 
+  border-radius: 50%; 
+  color: white; 
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-icon.edit { 
+  background: #2980b9; 
+}
+
+.btn-icon.delete { 
+  background: #c0392b; 
+}
+
+.btn-icon:hover { 
+  transform: scale(1.1); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* =========================
+   Paginación
+   ========================= */
+.paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.pag-btn {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  color: #333;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pag-btn:hover:not(.disabled) {
+  background: #ffe4f0;
+  border-color: #ff69b4;
+}
+
+.pag-btn.active {
+  background: linear-gradient(135deg, #ff69b4, #ff1493);
+  color: white;
+  border-color: #ff1493;
+  font-weight: 600;
+}
+
+.pag-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+@media (max-width: 768px) {
+  .cumpleanos-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-nuevo {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .tabla-cumpleanos { 
+    min-width: 700px; 
+  }
+}
+
+@media (max-width: 600px) {
+  .tabla-cumpleanos th, 
+  .tabla-cumpleanos td { 
+    padding: 8px 10px; 
+    font-size: 0.85rem;
+  }
+}

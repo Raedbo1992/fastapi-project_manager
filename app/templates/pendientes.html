@@ -1,0 +1,293 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Proyecto" if proyecto else "Nuevo Proyecto" }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', path='style_pendientes.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <h1><i class="bi bi-list-check"></i> Mis Pendientes</h1>
+    <a href="/pendientes/nuevo" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Nuevo Pendiente
+    </a>
+  </div>
+
+  <div class="filters-container">
+    <div class="filter-group">
+      <label for="filtro-estado"><i class="bi bi-funnel"></i> Estado:</label>
+      <select id="filtro-estado" class="form-select">
+        <option value="">Todos</option>
+        <option value="pendiente" {% if request.query_params.get('estado') == 'pendiente' %}selected{% endif %}>Pendiente</option>
+        <option value="en_progreso" {% if request.query_params.get('estado') == 'en_progreso' %}selected{% endif %}>En Progreso</option>
+        <option value="completado" {% if request.query_params.get('estado') == 'completado' %}selected{% endif %}>Completado</option>
+        <option value="cancelado" {% if request.query_params.get('estado') == 'cancelado' %}selected{% endif %}>Cancelado</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="filtro-prioridad"><i class="bi bi-exclamation-triangle"></i> Prioridad:</label>
+      <select id="filtro-prioridad" class="form-select">
+        <option value="">Todas</option>
+        <option value="urgente" {% if request.query_params.get('prioridad') == 'urgente' %}selected{% endif %}>Urgente</option>
+        <option value="alta" {% if request.query_params.get('prioridad') == 'alta' %}selected{% endif %}>Alta</option>
+        <option value="media" {% if request.query_params.get('prioridad') == 'media' %}selected{% endif %}>Media</option>
+        <option value="baja" {% if request.query_params.get('prioridad') == 'baja' %}selected{% endif %}>Baja</option>
+      </select>
+    </div>
+    
+    <button id="aplicar-filtros" class="btn btn-secondary">
+      <i class="bi bi-filter"></i> Aplicar Filtros
+    </button>
+  </div>
+
+  {% if request.session.get('mensaje') %}
+    <div class="alert alert-{{ 'success' if request.session['mensaje']['tipo'] == 'exito' else 'danger' }}">
+      {{ request.session['mensaje']['texto'] }}
+    </div>
+    {% set _ = request.session.pop('mensaje') %}
+  {% endif %}
+
+  <div class="pendientes-grid">
+    {% for pendiente in pendientes %}
+    <div class="pendiente-card {{ pendiente.estado }} priority-{{ pendiente.prioridad }}">
+      <div class="card-header">
+        <span class="priority-badge">{{ pendiente.prioridad }}</span>
+        <h3>{{ pendiente.titulo }}</h3>
+        <div class="card-actions">
+          <a href="/pendientes/editar/{{ pendiente.id }}" class="btn-action btn-edit" title="Editar">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <a href="/pendientes/eliminar/{{ pendiente.id }}" class="btn-action btn-delete eliminar-pendiente" 
+             data-id="{{ pendiente.id }}" title="Eliminar">
+            <i class="bi bi-trash"></i>
+          </a>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <p>{{ pendiente.descripcion or "Sin descripción" }}</p>
+        
+        <div class="meta-info">
+          <div class="meta-item">
+            <i class="bi bi-calendar"></i>
+            <span>Creado: {{ pendiente.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</span>
+          </div>
+          
+          {% if pendiente.fecha_limite %}
+          <div class="meta-item">
+            <i class="bi bi-clock"></i>
+            <span>Vence: {{ pendiente.fecha_limite.strftime('%d/%m/%Y %H:%M') }}</span>
+            {% if pendiente.fecha_limite < now %}
+            <span class="badge overdue">¡Vencido!</span>
+            {% endif %}
+          </div>
+          {% endif %}
+          
+          {% if pendiente.proyecto %}
+          <div class="meta-item">
+            <i class="bi bi-kanban"></i>
+            <span>Proyecto: {{ pendiente.proyecto.nombre }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="card-footer">
+        <div class="status-selector">
+          <select class="form-select-sm cambiar-estado" data-id="{{ pendiente.id }}">
+            <option value="pendiente" {% if pendiente.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+            <option value="en_progreso" {% if pendiente.estado == 'en_progreso' %}selected{% endif %}>En Progreso</option>
+            <option value="completado" {% if pendiente.estado == 'completado' %}selected{% endif %}>Completado</option>
+            <option value="cancelado" {% if pendiente.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+          </select>
+        </div>
+        
+        <div class="reminder">
+          {% if pendiente.recordatorio %}
+          <i class="bi bi-bell-fill"></i>
+          <span>{{ pendiente.recordatorio.strftime('%d/%m/%Y %H:%M') }}</span>
+          {% else %}
+          <button class="btn btn-sm btn-outline-primary btn-reminder" data-id="{{ pendiente.id }}">
+            <i class="bi bi-bell"></i> Recordatorio
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-emoji-smile"></i>
+      <p>¡No tienes pendientes registrados!</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal para recordatorios -->
+<div id="recordatorioModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3><i class="bi bi-bell"></i> Configurar Recordatorio</h3>
+    <form id="formRecordatorio">
+      <input type="hidden" id="pendienteId">
+      <div class="form-group">
+        <label for="fechaRecordatorio">Fecha y Hora:</label>
+        <input type="datetime-local" id="fechaRecordatorio" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-save"></i> Guardar
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Filtros
+  document.getElementById("aplicar-filtros").addEventListener("click", function() {
+    const estado = document.getElementById("filtro-estado").value;
+    const prioridad = document.getElementById("filtro-prioridad").value;
+    
+    let url = "/pendientes?";
+    if (estado) url += `estado=${estado}&`;
+    if (prioridad) url += `prioridad=${prioridad}`;
+    
+    window.location.href = url;
+  });
+  
+  // Cambiar estado
+  document.querySelectorAll(".cambiar-estado").forEach(select => {
+    select.addEventListener("change", function() {
+      const pendienteId = this.dataset.id;
+      const nuevoEstado = this.value;
+      
+      fetch(`/pendientes/cambiar-estado/${pendienteId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `estado=${nuevoEstado}`
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "success") {
+          const card = this.closest(".pendiente-card");
+          // Actualizar clases de estado
+          card.className = card.className.replace(/\b(pendiente|en_progreso|completado|cancelado)\b/g, '');
+          card.classList.add(nuevoEstado);
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Estado actualizado',
+            text: 'El estado del pendiente ha sido actualizado',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        }
+      });
+    });
+  });
+  
+  // Eliminar pendiente
+  document.querySelectorAll(".eliminar-pendiente").forEach(btn => {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const pendienteId = this.dataset.id;
+      
+      Swal.fire({
+        title: '¿Eliminar pendiente?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = this.href;
+        }
+      });
+    });
+  });
+  
+  // Recordatorios
+  const modal = document.getElementById("recordatorioModal");
+  const span = document.getElementsByClassName("close")[0];
+  
+  document.querySelectorAll(".btn-reminder").forEach(btn => {
+    btn.addEventListener("click", function() {
+      document.getElementById("pendienteId").value = this.dataset.id;
+      modal.style.display = "block";
+    });
+  });
+  
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+  
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+  
+  document.getElementById("formRecordatorio").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const pendienteId = document.getElementById("pendienteId").value;
+    const fecha = document.getElementById("fechaRecordatorio").value;
+    
+    fetch(`/pendientes/recordatorio/${pendienteId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `recordatorio=${encodeURIComponent(fecha)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "success") {
+        modal.style.display = "none";
+        location.reload();
+      }
+    });
+  });
+  
+  // Inicializar datepicker
+  flatpickr("#fechaRecordatorio", {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+    minDate: "today",
+    time_24hr: true,
+    locale: "es"
+  });
+});
+</script>
+
+{% if recordatorios_vencidos %}
+<script>
+  Swal.fire({
+    icon: 'info',
+    title: 'Tienes recordatorios vencidos',
+    html: '<ul style="text-align:left;">' +
+      `{% for r in recordatorios_vencidos %}` +
+      `<li><strong>{{ r.titulo }}</strong> — {{ r.recordatorio.strftime('%d/%m/%Y %H:%M') }}</li>` +
+      `{% endfor %}` +
+      '</ul>',
+    confirmButtonText: 'Ver ahora'
+  });
+</script>
+{% endif %}
+
+
+{% endblock %}
+
+
