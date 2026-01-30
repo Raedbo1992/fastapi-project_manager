@@ -9,276 +9,78 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
-   <!-- BASE CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', path='style_base_layout.css') }}">
-  
+  <!-- BASE CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', path='style_base_layout.css') }}?v=1">
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Bloque para agregar estilos adicionales -->
   {% block head %}{% endblock %}
-
-  <!-- Tu CSS (mejorado para acordeón y hover) -->
-  <style>
-    /* Google Font */
-    @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
-
-    /* Reset básico y tipografía */
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f4f6f8;
-      margin: 0;
-      padding: 0;
-    }
-
-   /* ============================= */
-/* LAYOUT PRINCIPAL CON SIDEBAR */
-/* ============================= */
-
-.layout {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f4f6f8;
-}
-
-/* Sidebar lateral */
-.sidebar {
-  width: 240px;
-  background: linear-gradient(180deg, #2c3e50, #34495e);
-  padding: 2rem 1.2rem;
-  color: #ecf0f1;
-  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35);
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-/* ============================= */
-/* ACORDEÓN SOLO DEL SIDEBAR */
-/* ============================= */
-
-.sidebar .accordion-button {
-  background-color: #34495e;
-  color: white;
-  border: none;
-  padding: 0.75rem 1rem;
-  width: 100%;
-  text-align: left;
-  font-size: 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  transition: background-color 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sidebar .accordion-button::after {
-  content: '▸';
-  position: absolute;
-  right: 1rem;
-  transition: transform 0.3s ease;
-}
-
-.sidebar .accordion-item.active .accordion-button::after {
-  transform: rotate(90deg);
-}
-
-.sidebar .accordion-button:hover {
-  background-color: #3d566e;
-}
-
-/* Contenido desplegable */
-.sidebar .accordion-content {
-  display: none;
-  flex-direction: column;
-  padding-left: 0.75rem;
-  padding-top: 0.3rem;
-  animation: slideDown 0.25s ease forwards;
-}
-
-.sidebar .accordion-item.active .accordion-content {
-  display: flex;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-5px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Links internos */
-.sidebar .accordion-content a {
-  color: #ecf0f1;
-  text-decoration: none;
-  margin: 0.2rem 0;
-  padding: 0.45rem 0.6rem;
-  border-radius: 4px;
-  transition: background-color 0.25s ease, padding-left 0.25s ease;
-}
-
-.sidebar .accordion-content a:hover {
-  background-color: #2874a6;
-  color: #ffffff;
-  padding-left: 1rem;
-}
-
-/* Links simples */
-.sidebar .accordion-link {
-  color: #ecf0f1;
-  text-decoration: none;
-  margin: 0.3rem 0;
-  padding: 0.6rem 0.8rem;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background-color 0.25s ease;
-}
-
-.sidebar .accordion-link:hover {
-  background-color: #3d566e;
-}
-
-/* Contenido principal */
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  background-color: #ffffff;
-}
-/*separador de bloques*/
-.sidebar .accordion-item {
-  margin-bottom: 0.35rem;
-}
-
-  </style>
 </head>
 
 <body>
   <div class="layout">
-    
-    <!-- 🧭 Menú lateral -->
     <aside class="sidebar">
       <div class="accordion">
 
-        <!-- Inicio -->
         <div class="accordion-item">
-          <a href="/dashboard" class="accordion-link">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4H9v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            </svg>
-            Inicio
-          </a>
+          <a href="/dashboard" class="accordion-link">🏠 Inicio</a>
         </div>
 
-        <!-- Ingresos -->
         <div class="accordion-item">
-          <button class="accordion-button">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4M12 2v2m0 16v2m10-10h-2M4 12H2"/>
-            </svg>
-            Ingresos
-          </button>
+          <button class="accordion-button">💰 Ingresos</button>
           <div class="accordion-content">
-            <!-- <a href="/ingresos/nuevo">➕ Registrar Ingreso</a> -->
             <a href="/ingresos">📑 Consultar Ingresos</a>
           </div>
         </div>
 
-        <!-- Gastos -->
         <div class="accordion-item">
-          <button class="accordion-button">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 13H5V11h14v2z"/>
-              <path d="M12 19V5"/>
-            </svg>
-            Gastos
-          </button>
+          <button class="accordion-button">💸 Gastos</button>
           <div class="accordion-content">
-            <!-- <a href="/gastos/nuevo">➕ Registrar Gasto</a> -->
             <a href="/gastos">📑 Consultar Gastos</a>
           </div>
         </div>
 
-        <!-- Notas pendientes -->
         <div class="accordion-item">
-          <a href="/pendientes" class="accordion-link">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 5h6M9 3h6a2 2 0 0 1 2 2v1h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h1V5a2 2 0 0 1 2-2h1z"/>
-              <path d="M9 14h6M9 18h6"/>
-            </svg>
-            Notas pendientes
-          </a>
+          <a href="/pendientes" class="accordion-link">📝 Notas pendientes</a>
         </div>
 
-        <!-- Contraseñas -->
         <div class="accordion-item">
-          <button class="accordion-button">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 17a5 5 0 0 0 5-5V9a5 5 0 0 0-10 0v3a5 5 0 0 0 5 5z"/>
-              <path d="M12 17v4"/>
-            </svg>
-            Contraseñas
-          </button>
+          <button class="accordion-button">🔐 Contraseñas</button>
           <div class="accordion-content">
-            <!-- <a href="/contrasenas/nuevo">➕ Crear Contraseña</a> -->
             <a href="/contrasenas">📑 Ver Contraseñas</a>
           </div>
         </div>
 
-
         <div class="accordion-item">
-          <button class="accordion-button">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-            Cumpleaños
-          </button>
-
+          <button class="accordion-button">🎂 Cumpleaños</button>
           <div class="accordion-content">
             <a href="/cumpleanos">📑 Ver Cumpleaños</a>
-            <!-- <a href="/cumpleanos/nuevo">➕ Nuevo Cumpleaños</a> -->
           </div>
         </div>
 
-
-
-        <!-- Cerrar sesión -->
         <div class="accordion-item">
-          <a href="/" class="accordion-link">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
-            </svg>
-            Cerrar sesión
-          </a>
+          <a href="/" class="accordion-link">🚪 Cerrar sesión</a>
         </div>
 
       </div>
     </aside>
 
-    <!-- 📄 Contenido principal -->
     <main class="main-content">
-      <div class="container">
-        {% block content %}{% endblock %}
-      </div>
+      {% block content %}{% endblock %}
     </main>
-
   </div>
 
-  <!-- JS para acordeón -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const buttons = document.querySelectorAll(".accordion-button");
-      buttons.forEach(button => {
-        button.addEventListener("click", () => {
-          button.parentElement.classList.toggle("active");
+      document.querySelectorAll(".accordion-button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          btn.parentElement.classList.toggle("active");
         });
       });
     });
   </script>
 
-  <!-- Bloque adicional para scripts -->
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>
