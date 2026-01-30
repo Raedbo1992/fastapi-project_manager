@@ -78,15 +78,41 @@ async def health_check(request: Request):
 
 # ========== ENDPOINTS DE INICIALIZACIÓN DE BD ==========
 
+@app.get("/drop-and-recreate-db")
+async def drop_and_recreate_database():
+    """PELIGRO: Elimina TODAS las tablas y las recrea"""
+    try:
+        from app.config.database import Base, engine
+        
+        # Eliminar todas las tablas
+        Base.metadata.drop_all(bind=engine)
+        
+        # Recrear todas las tablas
+        Base.metadata.create_all(bind=engine)
+        
+        return {"message": "✅ Base de datos eliminada y recreada correctamente"}
+    except Exception as e:
+        import traceback
+        return {
+            "error": str(e), 
+            "traceback": traceback.format_exc(),
+            "message": "❌ Error al recrear BD"
+        }
+
 @app.get("/init-db")
 async def init_database():
     """Crear todas las tablas en la base de datos"""
     try:
-        from database import Base, engine
+        from app.config.database import Base, engine
         Base.metadata.create_all(bind=engine)
         return {"message": "✅ Base de datos inicializada correctamente"}
     except Exception as e:
-        return {"error": str(e), "message": "❌ Error al inicializar BD"}
+        import traceback
+        return {
+            "error": str(e), 
+            "traceback": traceback.format_exc(),
+            "message": "❌ Error al inicializar BD"
+        }
 
 @app.get("/create-admin")
 async def create_admin():
@@ -111,8 +137,8 @@ async def create_admin():
         admin = Usuario(
             nombre="Administrador",
             email="admin@admin.com",
-            username="admin",  # ← AGREGAR
-            password=hashed_password,  # ← CAMBIAR de password_hash a password
+            username="admin",
+            password=hashed_password,
             rol="admin"
         )
         db.add(admin)
