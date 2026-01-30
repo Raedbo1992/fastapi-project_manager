@@ -82,18 +82,23 @@ async def health_check(request: Request):
 async def init_database():
     """Crear todas las tablas en la base de datos"""
     try:
-        from database import Base, engine
+        from app.config.database import Base, engine
         Base.metadata.create_all(bind=engine)
         return {"message": "✅ Base de datos inicializada correctamente"}
     except Exception as e:
-        return {"error": str(e), "message": "❌ Error al inicializar BD"}
+        import traceback
+        return {
+            "error": str(e), 
+            "traceback": traceback.format_exc(),
+            "message": "❌ Error al inicializar BD"
+        }
 
 @app.get("/create-admin")
 async def create_admin():
     """Crear usuario administrador inicial"""
     try:
-        from database import SessionLocal
-        from models import Usuario
+        from app.config.database import SessionLocal
+        from app.schema.models import Usuario
         from passlib.context import CryptContext
         
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -122,6 +127,11 @@ async def create_admin():
             "password": "admin123"
         }
     except Exception as e:
-        return {"error": str(e), "message": "❌ Error al crear admin"}
+        import traceback
+        return {
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "message": "❌ Error al crear admin"
+        }
 
 print("✅ Aplicación FastAPI configurada para Railway")
