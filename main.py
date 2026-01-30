@@ -12,7 +12,7 @@ app = FastAPI(title="Project Manager API")
 # ========== CONFIGURACIÓN CRÍTICA PARA RAILWAY ==========
 
 # Obtener path ABSOLUTO a los directorios
-BASE_DIR = Path(__file__).resolve().parent  # Raíz del proyecto
+BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "app" / "static"
 TEMPLATES_DIR = BASE_DIR / "app" / "templates"
 
@@ -25,7 +25,7 @@ print(f"📁 Existe templates?: {TEMPLATES_DIR.exists()}")
 # Configurar templates Jinja2
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Montar archivos estáticos CORRECTAMENTE
+# Montar archivos estáticos
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     print("✅ Archivos estáticos montados en /static")
@@ -46,7 +46,7 @@ async def serve_home(request: Request):
     """Sirve la página principal"""
     try:
         return templates.TemplateResponse(
-            "dashboard.html",  # O el nombre de tu template principal
+            "dashboard.html",
             {"request": request}
         )
     except Exception as e:
@@ -76,88 +76,52 @@ async def health_check(request: Request):
         "base_dir": str(BASE_DIR)
     }
 
-print("✅ Aplicación FastAPI configurada para Railway")
+# ========== ENDPOINTS DE INICIALIZACIÓN DE BD ==========
 
-
-
-@app.get("/setup-database")
-async def setup_database():
-    """Endpoint para configurar la base de datos"""
-    import pymysql
-    
+@app.get("/init-db")
+async def init_database():
+    """Crear todas las tablas en la base de datos"""
     try:
-        # Conectar como root
-        conn = pymysql.connect(
-            host='mysql.railway.internal',  # INTERNO en Railway
-            user='root',
-            password='xCFHuaDUxwMaJpmTUcMmahxhtCvRzUAn',
-            database='mysql'  # Conectar a la BD system
+        from database import Base, engine
+        Base.metadata.create_all(bind=engine)
+        return {"message": "✅ Base de datos inicializada correctamente"}
+    except Exception as e:
+        return {"error": str(e), "message": "❌ Error al inicializar BD"}
+
+@app.get("/create-admin")
+async def create_admin():
+    """Crear usuario administrador inicial"""
+    try:
+        from database import SessionLocal
+        from models import Usuario
+        from passlib.context import CryptContext
+        
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        db = SessionLocal()
+        
+        # Verificar si ya existe
+        existing = db.query(Usuario).filter(Usuario.email == "admin@admin.com").first()
+        if existing:
+            db.close()
+            return {"message": "⚠️ Usuario admin ya existe"}
+        
+        # Crear admin
+        admin = Usuario(
+            nombre="Administrador",
+            email="admin@admin.com",
+            password_hash=pwd_context.hash("admin123"),
+            rol="admin"
         )
-        
-        with conn.cursor() as cursor:
-            # 1. Crear base de datos si no existe
-            cursor.execute("CREATE DATABASE IF NOT EXISTS project_manager")
-            
-            # 2. Dar permisos a root desde cualquier IP
-            cursor.execute("""
-                GRANT ALL PRIVILEGES ON project_manager.* 
-                TO 'root'@'%' 
-                IDENTIFIED BY 'xCFHuaDUxwMaJpmTUcMmahxhtCvRzUAn'
-            """)
-            
-            # 3. Crear usuario para DBeaver
-            cursor.execute("""
-                CREATE USER IF NOT EXISTS 'dbeaver'@'%' 
-                IDENTIFIED BY 'DbeaverPass123!'
-            """)
-            
-            # 4. Dar permisos al usuario DBeaver
-            cursor.execute("""
-                GRANT ALL PRIVILEGES ON project_manager.* 
-                TO 'dbeaver'@'%'
-            """)
-            
-            # 5. Aplicar cambios
-            cursor.execute("FLUSH PRIVILEGES")
-            
-            # 6. Crear tablas básicas
-            cursor.execute("USE project_manager")
-            
-            # Tabla usuarios
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    username VARCHAR(50) UNIQUE NOT NULL,
-                    password VARCHAR(255) NOT NULL,
-                    nombre VARCHAR(100) NOT NULL,
-                    email VARCHAR(100),
-                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-        
-        conn.commit()
-        conn.close()
+        db.add(admin)
+        db.commit()
+        db.close()
         
         return {
-            "status": "success",
-            "message": "Base de datos configurada",
-            "connections": {
-                "dbeaver": {
-                    "host": "gondola.proxy.rlwy.net",
-                    "port": 31118,
-                    "user": "dbeaver",
-                    "password": "DbeaverPass123!",
-                    "database": "project_manager"
-                },
-                "root": {
-                    "host": "gondola.proxy.rlwy.net", 
-                    "port": 31118,
-                    "user": "root",
-                    "password": "xCFHuaDUxwMaJpmTUcMmahxhtCvRzUAn",
-                    "database": "project_manager"
-                }
-            }
+            "message": "✅ Usuario administrador creado",
+            "email": "admin@admin.com",
+            "password": "admin123"
         }
-        
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"error": str(e), "message": "❌ Error al crear admin"}
+
+print("✅ Aplicación FastAPI configurada para Railway")
