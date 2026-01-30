@@ -9,7 +9,8 @@ class Usuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
+    username = Column(String(100), unique=True, nullable=False)  # ← AGREGAR
+    password = Column(String(255), nullable=False)  # ← CAMBIAR de password_hash a password
     rol = Column(String(50), default="user")
     fecha_registro = Column(DateTime, default=datetime.datetime.utcnow)
 

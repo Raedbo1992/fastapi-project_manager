@@ -82,16 +82,11 @@ async def health_check(request: Request):
 async def init_database():
     """Crear todas las tablas en la base de datos"""
     try:
-        from app.config.database import Base, engine
+        from database import Base, engine
         Base.metadata.create_all(bind=engine)
         return {"message": "✅ Base de datos inicializada correctamente"}
     except Exception as e:
-        import traceback
-        return {
-            "error": str(e), 
-            "traceback": traceback.format_exc(),
-            "message": "❌ Error al inicializar BD"
-        }
+        return {"error": str(e), "message": "❌ Error al inicializar BD"}
 
 @app.get("/create-admin")
 async def create_admin():
@@ -99,9 +94,8 @@ async def create_admin():
     try:
         from app.config.database import SessionLocal
         from app.schema.models import Usuario
-        from passlib.context import CryptContext
+        import bcrypt
         
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         db = SessionLocal()
         
         # Verificar si ya existe
@@ -110,11 +104,15 @@ async def create_admin():
             db.close()
             return {"message": "⚠️ Usuario admin ya existe"}
         
+        # Hashear password con bcrypt (igual que en crud.py)
+        hashed_password = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
         # Crear admin
         admin = Usuario(
             nombre="Administrador",
             email="admin@admin.com",
-            password_hash=pwd_context.hash("admin123"),
+            username="admin",  # ← AGREGAR
+            password=hashed_password,  # ← CAMBIAR de password_hash a password
             rol="admin"
         )
         db.add(admin)
@@ -123,6 +121,7 @@ async def create_admin():
         
         return {
             "message": "✅ Usuario administrador creado",
+            "username": "admin",
             "email": "admin@admin.com",
             "password": "admin123"
         }
