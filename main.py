@@ -83,9 +83,20 @@ async def drop_and_recreate_database():
     """PELIGRO: Elimina TODAS las tablas y las recrea"""
     try:
         from app.config.database import Base, engine
+        from sqlalchemy import text
+        
+        # Desactivar verificación de foreign keys
+        with engine.connect() as connection:
+            connection.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+            connection.commit()
         
         # Eliminar todas las tablas
         Base.metadata.drop_all(bind=engine)
+        
+        # Reactivar verificación de foreign keys
+        with engine.connect() as connection:
+            connection.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
+            connection.commit()
         
         # Recrear todas las tablas
         Base.metadata.create_all(bind=engine)
@@ -97,21 +108,6 @@ async def drop_and_recreate_database():
             "error": str(e), 
             "traceback": traceback.format_exc(),
             "message": "❌ Error al recrear BD"
-        }
-
-@app.get("/init-db")
-async def init_database():
-    """Crear todas las tablas en la base de datos"""
-    try:
-        from app.config.database import Base, engine
-        Base.metadata.create_all(bind=engine)
-        return {"message": "✅ Base de datos inicializada correctamente"}
-    except Exception as e:
-        import traceback
-        return {
-            "error": str(e), 
-            "traceback": traceback.format_exc(),
-            "message": "❌ Error al inicializar BD"
         }
 
 @app.get("/create-admin")
