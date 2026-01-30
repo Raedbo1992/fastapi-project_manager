@@ -1,374 +1,206 @@
-{% extends "base_layout.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mis Finanzas</title>
+    
+    <!-- CSS LOCAL - RUTA CORRECTA PARA FASTAPI -->
+    <link rel="stylesheet" href="/static/style_dashboard.css">
+    <link rel="stylesheet" href="/static/style_base_layout.css">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Chart.js desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="dashboard-header">
+            <h1><i class="bi bi-graph-up"></i> Resumen Financiero</h1>
+            <div class="user-info">
+                <p>Bienvenido, Usuario</p>
+                <small id="fecha-actual">Cargando fecha...</small>
+            </div>
+        </header>
 
-{% block title %}Dashboard - Mis Finanzas{% endblock %}
+        <div class="dashboard-content">
+            <!-- Resumen rápido -->
+            <div class="summary-cards">
+                <div class="card income">
+                    <h3><i class="bi bi-arrow-down-circle"></i> Ingresos</h3>
+                    <p class="amount" id="total-ingresos">$0</p>
+                    <div class="trend positive">+0%</div>
+                </div>
+                
+                <div class="card expense">
+                    <h3><i class="bi bi-arrow-up-circle"></i> Gastos</h3>
+                    <p class="amount" id="total-gastos">$0</p>
+                    <div class="trend negative">+0%</div>
+                </div>
+                
+                <div class="card balance">
+                    <h3><i class="bi bi-wallet2"></i> Saldo</h3>
+                    <p class="amount" id="saldo-disponible">$0</p>
+                    <div class="trend neutral">0% ahorro</div>
+                </div>
+            </div>
 
-{% block head %}
-  <link rel="stylesheet" href="{{ url_for('static', path='style_dashboard.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-{% endblock %}
+            <!-- Gráficos -->
+            <div class="charts-row">
+                <div class="chart-container">
+                    <h3><i class="bi bi-tags"></i> Gastos por Categoría</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-categorias"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3><i class="bi bi-calendar-month"></i> Evolución Mensual</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-evolucion"></canvas>
+                    </div>
+                </div>
+            </div>
 
-{% block content %}
-<div class="dashboard">
-  <div class="dashboard-header">
-    <h1><i class="bi bi-graph-up"></i> Resumen Financiero - {{ fecha_actual.strftime('%B %Y') }}</h1>
-    <div class="user-info">
-      <p>Bienvenido, {{ usuario.nombre }}</p>
-      <small>Última actualización: {{ fecha_actual.strftime('%d/%m/%Y %H:%M') }}</small>
-    </div>
-  </div>
-
-  <div class="bloques-dashboard">
-    <!-- Bloque 1: Resumen mejorado -->
-    <div class="bloque resumen">
-      <div class="resumen-card ingresos">
-        <h3><i class="bi bi-arrow-down-circle"></i> Ingresos</h3>
-        <p>${{ "{:,.0f}".format(stats.total_ingresos) }}</p>
-        <div class="resumen-meta">
-          <span class="{% if stats.variacion_ingresos >= 0 %}positive{% else %}negative{% endif %}">
-            {{ "{:+.0f}%".format(stats.variacion_ingresos) }} vs mes anterior
-          </span>
+            <!-- Últimos movimientos -->
+            <div class="recent-activity">
+                <h3><i class="bi bi-clock-history"></i> Últimos Movimientos</h3>
+                <div id="movimientos-list">
+                    <p>Cargando movimientos...</p>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="resumen-card gastos">
-        <h3><i class="bi bi-arrow-up-circle"></i> Gastos</h3>
-        <p>${{ "{:,.0f}".format(stats.total_gastos) }}</p>
-        <div class="resumen-meta">
-          <span class="{% if stats.variacion_gastos <= 0 %}positive{% else %}negative{% endif %}">
-            {{ "{:+.0f}%".format(stats.variacion_gastos) }} vs mes anterior
-          </span>
-        </div>
-      </div>
-      <div class="resumen-card saldo">
-        <h3><i class="bi bi-wallet2"></i> Saldo Disponible</h3>
-        <p>${{ "{:,.0f}".format(stats.saldo_disponible) }}</p>
-        <div class="resumen-meta">
-          <span>{{ stats.porcentaje_ahorro }}% de ahorro</span>
-        </div>
-      </div>
     </div>
 
-    <!-- Bloque 2: Gráfico de gastos por categoría mejorado -->
-    <div class="bloque grafico-container">
-      <h3><i class="bi bi-tags"></i> Gastos por Categoría</h3>
-      <div class="chart-wrapper">
-        <canvas id="graficoCategorias"></canvas>
-      </div>
-      <div class="chart-summary">
-        <p>Total gastado: ${{ "{:,.0f}".format(stats.total_gastos) }}</p>
-        {% if stats.categoria_mayor.nombre != 'Ninguna' %}
-          <p>Categoría mayor: {{ stats.categoria_mayor.nombre }} ({{ stats.categoria_mayor.porcentaje }}%)</p>
-        {% endif %}
-      </div>
-    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Actualizar fecha
+        const now = new Date();
+        document.getElementById('fecha-actual').textContent = 
+            `Última actualización: ${now.toLocaleDateString('es-ES')} ${now.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}`;
 
-    <!-- Bloque 3: Evolución mensual -->
-    <div class="bloque grafico-container">
-      <h3><i class="bi bi-calendar-month"></i> Evolución Mensual</h3>
-      <div class="chart-wrapper">
-        <canvas id="graficoEvolucion"></canvas>
-      </div>
-      <div class="chart-summary">
-        <p>Promedio mensual: ${{ "{:,.0f}".format(stats.promedio_mensual) }}</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Segunda fila de gráficos -->
-  <div class="bloques-dashboard">
-    <!-- Bloque 4: Distribución por tipo mejorada -->
-    <div class="bloque grafico-container">
-      <h3><i class="bi bi-pie-chart"></i> Distribución por Tipo</h3>
-      <div class="chart-wrapper">
-        <canvas id="graficoTipos"></canvas>
-      </div>
-      <div class="chart-summary">
-        <p>Gastos fijos: {{ stats.porcentaje_fijos }}%</p>
-        <p>Gastos variables: {{ stats.porcentaje_variables }}%</p>
-      </div>
-    </div>
-
-    <!-- Bloque 5: Comparación ingresos vs gastos -->
-    <div class="bloque grafico-container">
-      <h3><i class="bi bi-bar-chart"></i> Ingresos vs Gastos</h3>
-      <div class="chart-wrapper">
-        <canvas id="graficoComparacion"></canvas>
-      </div>
-      <div class="chart-summary">
-        <p>Balance: ${{ "{:,.0f}".format(stats.saldo_disponible) }}</p>
-      </div>
-    </div>
-
-    <!-- Bloque 6: Últimos movimientos -->
-    <div class="bloque ultimos-movimientos">
-      <h3><i class="bi bi-clock-history"></i> Últimos Movimientos</h3>
-      <div class="movimientos-list">
-        {% for movimiento in ultimos_movimientos %}
-        <div class="movimiento {% if movimiento.tipo == 'ingreso' %}ingreso{% else %}gasto{% endif %}">
-          <div class="movimiento-icon">
-            <i class="bi bi-{% if movimiento.tipo == 'ingreso' %}arrow-down-circle{% else %}arrow-up-circle{% endif %}"></i>
-          </div>
-          <div class="movimiento-details">
-            <span class="movimiento-categoria">{{ movimiento.categoria }}</span>
-            <span class="movimiento-descripcion">{{ movimiento.descripcion|truncate(30) }}</span>
-          </div>
-          <div class="movimiento-monto">
-            ${{ "{:,.0f}".format(movimiento.monto) }}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Configuración común para todos los gráficos
-  Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-  Chart.defaults.color = '#333';
-  Chart.defaults.borderColor = 'rgba(0, 0, 0, 0.1)';
-
-  // 1. Gráfico de gastos por categoría (Doughnut mejorado)
-  const ctxCategorias = document.getElementById('graficoCategorias').getContext('2d');
-  new Chart(ctxCategorias, {
-    type: 'doughnut',
-    data: {
-      labels: Object.keys({{ stats.gastos_por_categoria|tojson }}),
-      datasets: [{
-        data: Object.values({{ stats.gastos_por_categoria|tojson }}),
-        backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-          '#FF9F40', '#8AC249', '#EA5F89', '#00BFFF', '#FFD700'
-        ],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            boxWidth: 12,
-            padding: 20,
-            usePointStyle: true
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const label = context.label || '';
-              const value = new Intl.NumberFormat('es-MX', { 
-                style: 'currency', 
-                currency: 'MXN' 
-              }).format(context.raw);
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = Math.round((context.raw / total) * 100);
-              return `${label}: ${value} (${percentage}%)`;
+        // Configurar gráficos
+        Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        
+        // Gráfico de categorías
+        const ctxCat = document.getElementById('chart-categorias').getContext('2d');
+        new Chart(ctxCat, {
+            type: 'doughnut',
+            data: {
+                labels: ['Alimentación', 'Transporte', 'Entretenimiento', 'Servicios', 'Otros'],
+                datasets: [{
+                    data: [30, 20, 15, 25, 10],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'right' }
+                }
             }
-          }
-        },
-        datalabels: {
-          formatter: (value, ctx) => {
-            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = (value * 100 / total).toFixed(1);
-            return percentage >= 5 ? `${percentage}%` : '';
-          },
-          color: '#fff',
-          font: {
-            weight: 'bold'
-          }
-        }
-      },
-      cutout: '65%',
-      animation: {
-        animateScale: true,
-        animateRotate: true
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
+        });
 
-  // 2. Gráfico de distribución por tipo (Pie mejorado)
-  const ctxTipos = document.getElementById('graficoTipos').getContext('2d');
-  new Chart(ctxTipos, {
-    type: 'pie',
-    data: {
-      labels: Object.keys({{ stats.gastos_por_tipo|tojson }}),
-      datasets: [{
-        data: Object.values({{ stats.gastos_por_tipo|tojson }}),
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            boxWidth: 12,
-            padding: 20
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const label = context.label || '';
-              const value = new Intl.NumberFormat('es-MX', { 
-                style: 'currency', 
-                currency: 'MXN' 
-              }).format(context.raw);
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = Math.round((context.raw / total) * 100);
-              return `${label}: ${value} (${percentage}%)`;
+        // Gráfico de evolución
+        const ctxEvo = document.getElementById('chart-evolucion').getContext('2d');
+        new Chart(ctxEvo, {
+            type: 'line',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Ingresos',
+                    data: [5000, 5200, 4800, 5500, 5300, 6000],
+                    borderColor: '#4CAF50',
+                    tension: 0.3
+                }, {
+                    label: 'Gastos',
+                    data: [3000, 3200, 2800, 3500, 3300, 4000],
+                    borderColor: '#F44336',
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
             }
-          }
-        },
-        datalabels: {
-          formatter: (value, ctx) => {
-            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = (value * 100 / total).toFixed(0);
-            return `${percentage}%`;
-          },
-          color: '#fff',
-          font: {
-            weight: 'bold'
-          }
-        }
-      },
-      animation: {
-        animateScale: true,
-        animateRotate: true
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
+        });
 
-  // 3. Gráfico de evolución mensual (Línea)
-  const ctxEvolucion = document.getElementById('graficoEvolucion').getContext('2d');
-  new Chart(ctxEvolucion, {
-    type: 'line',
-    data: {
-      labels: {{ stats.evolucion_mensual.labels|tojson }},
-      datasets: [{
-        label: 'Ingresos',
-        data: {{ stats.evolucion_mensual.ingresos|tojson }},
-        borderColor: '#4CAF50',
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-        tension: 0.3,
-        fill: true
-      }, {
-        label: 'Gastos',
-        data: {{ stats.evolucion_mensual.gastos|tojson }},
-        borderColor: '#F44336',
-        backgroundColor: 'rgba(244, 67, 54, 0.1)',
-        tension: 0.3,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function(value) {
-              return '$' + value.toLocaleString();
-            }
-          }
-        }
-      },
-      interaction: {
-        mode: 'nearest',
-        axis: 'x',
-        intersect: false
-      }
-    }
-  });
+        // Datos de ejemplo
+        document.getElementById('total-ingresos').textContent = '$5,800';
+        document.getElementById('total-gastos').textContent = '$3,450';
+        document.getElementById('saldo-disponible').textContent = '$2,350';
+        
+        // Movimientos de ejemplo
+        const movimientos = [
+            { tipo: 'ingreso', categoria: 'Salario', monto: 2500, fecha: 'Hoy' },
+            { tipo: 'gasto', categoria: 'Supermercado', monto: 450, fecha: 'Ayer' },
+            { tipo: 'gasto', categoria: 'Gasolina', monto: 300, fecha: 'Ayer' },
+            { tipo: 'ingreso', categoria: 'Freelance', monto: 800, fecha: '2 días' }
+        ];
+        
+        const movimientosHTML = movimientos.map(m => `
+            <div class="movimiento ${m.tipo}">
+                <div class="movimiento-icon">
+                    <i class="bi bi-${m.tipo === 'ingreso' ? 'arrow-down-circle' : 'arrow-up-circle'}"></i>
+                </div>
+                <div class="movimiento-details">
+                    <span class="categoria">${m.categoria}</span>
+                    <span class="fecha">${m.fecha}</span>
+                </div>
+                <div class="movimiento-monto ${m.tipo}">
+                    ${m.tipo === 'ingreso' ? '+' : '-'}$${m.monto}
+                </div>
+            </div>
+        `).join('');
+        
+        document.getElementById('movimientos-list').innerHTML = movimientosHTML;
+    });
+    </script>
 
-  // 4. Gráfico de comparación ingresos vs gastos (Barra)
-  const ctxComparacion = document.getElementById('graficoComparacion').getContext('2d');
-  new Chart(ctxComparacion, {
-    type: 'bar',
-    data: {
-      labels: ['Ingresos', 'Gastos', 'Balance'],
-      datasets: [{
-        label: 'Monto',
-        data: [
-          {{ stats.total_ingresos }},
-          {{ stats.total_gastos }},
-          {{ stats.saldo_disponible }}
-        ],
-        backgroundColor: [
-          'rgba(76, 175, 80, 0.7)',
-          'rgba(244, 67, 54, 0.7)',
-          'rgba(33, 150, 243, 0.7)'
-        ],
-        borderColor: [
-          '#4CAF50',
-          '#F44336',
-          '#2196F3'
-        ],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return new Intl.NumberFormat('es-MX', { 
-                style: 'currency', 
-                currency: 'MXN' 
-              }).format(context.raw);
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function(value) {
-              return '$' + value.toLocaleString();
-            }
-          }
-        }
-      }
-    }
-  });
-});
-</script>
-
-
-</div>  <!-- Cierre del div.bloques-dashboard -->
-  </div>  <!-- Cierre del div.dashboard -->
-
-{% endblock %}  <!-- Cierre del bloque content -->
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Todo tu código JavaScript existente
-});
-</script>
+    <!-- CSS inline básico para empezar -->
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .dashboard-header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .card.income { border-left: 4px solid #4CAF50; }
+    .card.expense { border-left: 4px solid #F44336; }
+    .card.balance { border-left: 4px solid #2196F3; }
+    .card h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
+    .card .amount { font-size: 24px; font-weight: bold; margin: 10px 0; }
+    .card .trend { font-size: 12px; padding: 3px 8px; border-radius: 12px; display: inline-block; }
+    .trend.positive { background: #e8f5e9; color: #2e7d32; }
+    .trend.negative { background: #ffebee; color: #c62828; }
+    .trend.neutral { background: #e3f2fd; color: #1565c0; }
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+    .chart-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .chart-wrapper { height: 300px; }
+    .recent-activity { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .movimiento { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
+    .movimiento:last-child { border-bottom: none; }
+    .movimiento-icon { margin-right: 15px; }
+    .movimiento-details { flex: 1; }
+    .movimiento .categoria { font-weight: bold; display: block; }
+    .movimiento .fecha { font-size: 12px; color: #666; }
+    .movimiento-monto { font-weight: bold; }
+    .movimiento-monto.ingreso { color: #4CAF50; }
+    .movimiento-monto.gasto { color: #F44336; }
+    </style>
+</body>
+</html>
