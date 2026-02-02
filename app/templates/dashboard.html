@@ -3,10 +3,7 @@
 {% block title %}Dashboard - Mis Finanzas{% endblock %}
 
 {% block head %}
-<!-- USAR RUTA RELATIVA DIRECTA -->
-<link rel="stylesheet" href="/static/style_dashboard.css?v=1.1">
-
-<!-- CDNs con HTTPS (ya los tienes) -->
+<link rel="stylesheet" href="/static/style_dashboard.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
@@ -27,71 +24,58 @@
     <div class="bloque resumen">
       <div class="resumen-card ingresos">
         <h3>Ingresos</h3>
-        <p>${{ "{:,.0f}".format(stats.total_ingresos) if stats.total_ingresos else 0 }}</p>
+        <p>${{ "{:,.0f}".format(stats.total_ingresos) }}</p>
       </div>
 
       <div class="resumen-card gastos">
         <h3>Gastos</h3>
-        <p>${{ "{:,.0f}".format(stats.total_gastos) if stats.total_gastos else 0 }}</p>
+        <p>${{ "{:,.0f}".format(stats.total_gastos) }}</p>
       </div>
 
       <div class="resumen-card saldo">
         <h3>Saldo</h3>
-        <p>${{ "{:,.0f}".format(stats.saldo_disponible) if stats.saldo_disponible else 0 }}</p>
+        <p>${{ "{:,.0f}".format(stats.saldo_disponible) }}</p>
       </div>
     </div>
 
-    {% if stats.gastos_por_categoria %}
     <div class="bloque grafico-container">
       <h3>Gastos por Categoría</h3>
       <canvas id="graficoCategorias"></canvas>
     </div>
-    {% endif %}
 
-    {% if stats.evolucion_mensual and stats.evolucion_mensual.ingresos %}
     <div class="bloque grafico-container">
       <h3>Evolución Mensual</h3>
       <canvas id="graficoEvolucion"></canvas>
     </div>
-    {% endif %}
 
   </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  {% if stats.gastos_por_categoria %}
+
   const categorias = {{ stats.gastos_por_categoria|tojson }};
   const ctx1 = document.getElementById("graficoCategorias");
 
-  if (ctx1 && Object.keys(categorias).length > 0) {
+  if (ctx1) {
     new Chart(ctx1, {
       type: "doughnut",
       data: {
         labels: Object.keys(categorias),
         datasets: [{
           data: Object.values(categorias),
-          backgroundColor: [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-            '#9966FF', '#FF9F40', '#8AC926', '#1982C4'
-          ],
           borderWidth: 1
         }]
       },
-      options: { 
-        responsive: true,
-        maintainAspectRatio: true
-      }
+      options: { responsive: true }
     });
   }
-  {% endif %}
 
-  {% if stats.evolucion_mensual and stats.evolucion_mensual.ingresos %}
   const evolucion = {{ stats.evolucion_mensual.ingresos|tojson }};
   const labels = {{ stats.evolucion_mensual.labels|tojson }};
   const ctx2 = document.getElementById("graficoEvolucion");
 
-  if (ctx2 && evolucion.length > 0) {
+  if (ctx2) {
     new Chart(ctx2, {
       type: "line",
       data: {
@@ -100,19 +84,13 @@ document.addEventListener("DOMContentLoaded", function () {
           label: "Ingresos",
           data: evolucion,
           tension: 0.3,
-          fill: true,
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgb(54, 162, 235)',
-          borderWidth: 2
+          fill: true
         }]
       },
-      options: { 
-        responsive: true,
-        maintainAspectRatio: true
-      }
+      options: { responsive: true }
     });
   }
-  {% endif %}
+
 });
 </script>
 
