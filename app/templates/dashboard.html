@@ -5,8 +5,6 @@
 {% block head %}
 <link rel="stylesheet" href="/static/style_dashboard.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
 {% endblock %}
 
 {% block content %}
@@ -20,77 +18,262 @@
   </div>
 
   <div class="bloques-dashboard">
-
+    <!-- Bloque 1: Resumen -->
     <div class="bloque resumen">
       <div class="resumen-card ingresos">
         <h3>Ingresos</h3>
         <p>${{ "{:,.0f}".format(stats.total_ingresos) }}</p>
+        <div class="resumen-meta">
+          <span class="{% if stats.variacion_ingresos >= 0 %}positive{% else %}negative{% endif %}">
+            {{ "{:+.0f}%".format(stats.variacion_ingresos) }} vs mes anterior
+          </span>
+        </div>
       </div>
 
       <div class="resumen-card gastos">
         <h3>Gastos</h3>
         <p>${{ "{:,.0f}".format(stats.total_gastos) }}</p>
+        <div class="resumen-meta">
+          <span class="{% if stats.variacion_gastos <= 0 %}positive{% else %}negative{% endif %}">
+            {{ "{:+.0f}%".format(stats.variacion_gastos) }} vs mes anterior
+          </span>
+        </div>
       </div>
 
       <div class="resumen-card saldo">
-        <h3>Saldo</h3>
+        <h3>Saldo Disponible</h3>
         <p>${{ "{:,.0f}".format(stats.saldo_disponible) }}</p>
+        <div class="resumen-meta">
+          <span>{{ "{:.1f}".format(stats.porcentaje_ahorro) }}% de ahorro</span>
+        </div>
       </div>
     </div>
 
+    <!-- Bloque 2: Gráfico de gastos por categoría -->
     <div class="bloque grafico-container">
       <h3>Gastos por Categoría</h3>
-      <canvas id="graficoCategorias"></canvas>
+      <div class="chart-wrapper">
+        <canvas id="graficoCategorias"></canvas>
+      </div>
+      <div class="chart-summary">
+        <p>Total gastado: ${{ "{:,.0f}".format(stats.total_gastos) }}</p>
+        {% if stats.categoria_mayor.nombre != 'Ninguna' %}
+          <p>Categoría mayor: {{ stats.categoria_mayor.nombre }} ({{ "{:.0f}".format(stats.categoria_mayor.porcentaje) }}%)</p>
+        {% endif %}
+      </div>
     </div>
 
+    <!-- Bloque 3: Evolución mensual -->
     <div class="bloque grafico-container">
       <h3>Evolución Mensual</h3>
-      <canvas id="graficoEvolucion"></canvas>
+      <div class="chart-wrapper">
+        <canvas id="graficoEvolucion"></canvas>
+      </div>
+      <div class="chart-summary">
+        <p>Promedio mensual: ${{ "{:,.0f}".format(stats.promedio_mensual) }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda fila de gráficos -->
+  <div class="bloques-dashboard">
+    <!-- Bloque 4: Distribución por tipo -->
+    <div class="bloque grafico-container">
+      <h3>Distribución por Tipo</h3>
+      <div class="chart-wrapper">
+        <canvas id="graficoTipos"></canvas>
+      </div>
+      <div class="chart-summary">
+        <p>Gastos fijos: {{ "{:.0f}".format(stats.porcentaje_fijos) }}%</p>
+        <p>Gastos variables: {{ "{:.0f}".format(stats.porcentaje_variables) }}%</p>
+      </div>
     </div>
 
+    <!-- Bloque 5: Comparación ingresos vs gastos -->
+    <div class="bloque grafico-container">
+      <h3>Ingresos vs Gastos</h3>
+      <div class="chart-wrapper">
+        <canvas id="graficoComparacion"></canvas>
+      </div>
+      <div class="chart-summary">
+        <p>Balance: ${{ "{:,.0f}".format(stats.saldo_disponible) }}</p>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function() {
+  // Configuración común
+  Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+  Chart.defaults.color = '#333';
 
-  const categorias = {{ stats.gastos_por_categoria|tojson }};
-  const ctx1 = document.getElementById("graficoCategorias");
-
-  if (ctx1) {
-    new Chart(ctx1, {
-      type: "doughnut",
+  // 1. Gráfico de gastos por categoría (Doughnut)
+  const ctxCategorias = document.getElementById('graficoCategorias');
+  if (ctxCategorias) {
+    new Chart(ctxCategorias, {
+      type: 'doughnut',
       data: {
-        labels: Object.keys(categorias),
+        labels: Object.keys({{ stats.gastos_por_categoria|tojson }}),
         datasets: [{
-          data: Object.values(categorias),
+          data: Object.values({{ stats.gastos_por_categoria|tojson }}),
+          backgroundColor: [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#8AC249', '#EA5F89', '#00BFFF', '#FFD700'
+          ],
           borderWidth: 1
         }]
       },
-      options: { responsive: true }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              boxWidth: 12,
+              padding: 15
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = '$' + context.raw.toLocaleString();
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((context.raw / total) * 100);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        },
+        cutout: '65%'
+      }
     });
   }
 
-  const evolucion = {{ stats.evolucion_mensual.ingresos|tojson }};
-  const labels = {{ stats.evolucion_mensual.labels|tojson }};
-  const ctx2 = document.getElementById("graficoEvolucion");
-
-  if (ctx2) {
-    new Chart(ctx2, {
-      type: "line",
+  // 2. Gráfico de distribución por tipo (Pie)
+  const ctxTipos = document.getElementById('graficoTipos');
+  if (ctxTipos) {
+    new Chart(ctxTipos, {
+      type: 'pie',
       data: {
-        labels: labels,
+        labels: Object.keys({{ stats.gastos_por_tipo|tojson }}),
         datasets: [{
-          label: "Ingresos",
-          data: evolucion,
+          data: Object.values({{ stats.gastos_por_tipo|tojson }}),
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              boxWidth: 12,
+              padding: 15
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Gráfico de evolución mensual (Línea)
+  const ctxEvolucion = document.getElementById('graficoEvolucion');
+  if (ctxEvolucion) {
+    new Chart(ctxEvolucion, {
+      type: 'line',
+      data: {
+        labels: {{ stats.evolucion_mensual.labels|tojson }},
+        datasets: [{
+          label: 'Ingresos',
+          data: {{ stats.evolucion_mensual.ingresos|tojson }},
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          tension: 0.3,
+          fill: true
+        }, {
+          label: 'Gastos',
+          data: {{ stats.evolucion_mensual.gastos|tojson }},
+          borderColor: '#F44336',
+          backgroundColor: 'rgba(244, 67, 54, 0.1)',
           tension: 0.3,
           fill: true
         }]
       },
-      options: { responsive: true }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '$' + value.toLocaleString();
+              }
+            }
+          }
+        }
+      }
     });
   }
 
+  // 4. Gráfico de comparación (Barra)
+  const ctxComparacion = document.getElementById('graficoComparacion');
+  if (ctxComparacion) {
+    new Chart(ctxComparacion, {
+      type: 'bar',
+      data: {
+        labels: ['Ingresos', 'Gastos', 'Balance'],
+        datasets: [{
+          label: 'Monto',
+          data: [
+            {{ stats.total_ingresos }},
+            {{ stats.total_gastos }},
+            {{ stats.saldo_disponible }}
+          ],
+          backgroundColor: [
+            'rgba(76, 175, 80, 0.7)',
+            'rgba(244, 67, 54, 0.7)',
+            'rgba(33, 150, 243, 0.7)'
+          ],
+          borderColor: [
+            '#4CAF50',
+            '#F44336',
+            '#2196F3'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '$' + value.toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    });
+  }
 });
 </script>
 
