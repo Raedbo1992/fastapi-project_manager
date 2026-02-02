@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from app.controller.routes import router     
 from starlette.middleware.sessions import SessionMiddleware
 import os
@@ -9,32 +9,40 @@ from pathlib import Path
 
 app = FastAPI(title="Project Manager API")
 
-# ========== CONFIGURACIÓN CRÍTICA PARA RAILWAY ==========
+# ========== CONFIGURACIÓN CORREGIDA PARA RAILWAY ==========
 
 # Obtener path ABSOLUTO a los directorios
 BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR / "app" / "static"
-TEMPLATES_DIR = BASE_DIR / "app" / "templates"
+APP_DIR = BASE_DIR / "app"
+STATIC_DIR = APP_DIR / "static"
+TEMPLATES_DIR = APP_DIR / "templates"
 
 print(f"📁 BASE_DIR: {BASE_DIR}")
+print(f"📁 APP_DIR: {APP_DIR}")
 print(f"📁 STATIC_DIR: {STATIC_DIR}")
 print(f"📁 TEMPLATES_DIR: {TEMPLATES_DIR}")
 print(f"📁 Existe static?: {STATIC_DIR.exists()}")
 print(f"📁 Existe templates?: {TEMPLATES_DIR.exists()}")
 
-# Configurar templates Jinja2
+# Configurar templates Jinja2 - CORREGIDO
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Montar archivos estáticos
+# Montar archivos estáticos - CORREGIDO PARA RAILWAY
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     print("✅ Archivos estáticos montados en /static")
 else:
-    print("⚠️  Directorio static no encontrado")
+    # Si no encuentra static, crearlo
+    print("⚠️  Directorio static no encontrado, intentando crear...")
+    STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
-# Middleware de sesión
-secret_key = os.getenv("SECRET_KEY", "clave_temporal_123")
-app.add_middleware(SessionMiddleware, secret_key=secret_key)
+# Middleware de sesión - ASEGURAR QUE SECRET_KEY ESTÁ DEFINIDA
+secret_key = os.getenv("SECRET_KEY")
+if not secret_key:
+    print("⚠️  SECRET_KEY no encontrada en variables de entorno, usando temporal")
+    secret_key = "clave_temporal_123_" + os.urandom(16).hex()
+    
+app.add_middleware(SessionMiddleware, secret_key=secret_key, session_cookie="session")
 
 # Incluir rutas del controlador
 app.include_router(router)
@@ -43,38 +51,63 @@ app.include_router(router)
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_home(request: Request):
-    """Sirve la página principal"""
-    try:
+    """Redirige a login si no está autenticado, sino a dashboard"""
+    if "usuario" not in request.session:
+        return RedirectResponse(url="/login")
+    
+    from app.repository.crud import obtener_usuario_por_id
+    from app.config.database import SessionLocal
+    
+    db = SessionLocal()
+    usuario_id = request.session["usuario"]["id"]
+    usuario = obtener_usuario_por_id(db, usuario_id)
+    db.close()
+    
+    if usuario:
+        from datetime import datetime
+        from app.repository.crud import obtener_resumen_financiero
+        
+        db = SessionLocal()
+        stats = obtener_resumen_financiero(db, usuario_id)
+        db.close()
+        
         return templates.TemplateResponse(
             "dashboard.html",
-            {"request": request}
+            {
+                "request": request,
+                "usuario": usuario,
+                "fecha_actual": datetime.now(),
+                "stats": stats
+            }
         )
-    except Exception as e:
-        return HTMLResponse(f"<h1>Error cargando template</h1><p>{str(e)}</p>")
+    return RedirectResponse(url="/login")
 
 @app.get("/login", response_class=HTMLResponse)
 async def serve_login(request: Request):
     """Sirve página de login"""
-    try:
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request}
-        )
-    except:
-        return HTMLResponse("<h1>Login page</h1>")
+    if "usuario" in request.session:
+        return RedirectResponse(url="/")
+    
+    return templates.TemplateResponse("login.html", {"request": request})
 
-# Health check
+# Health check mejorado
 @app.get("/health")
-async def health_check(request: Request):
+async def health_check():
     import datetime
+    import os
+    
     return {
         "status": "healthy",
-        "message": "FastAPI is running",
+        "message": "FastAPI is running on Railway",
         "timestamp": datetime.datetime.now().isoformat(),
+        "environment": os.getenv("RAILWAY_ENVIRONMENT", "unknown"),
         "static_files": str(STATIC_DIR.exists()),
         "templates": str(TEMPLATES_DIR.exists()),
-        "base_dir": str(BASE_DIR)
+        "base_dir": str(BASE_DIR),
+        "static_dir": str(STATIC_DIR)
     }
+
+# ... resto del código igual ...
 
 # ========== ENDPOINTS DE INICIALIZACIÓN DE BD ==========
 
