@@ -6,6 +6,7 @@ from app.controller.routes import router
 from starlette.middleware.sessions import SessionMiddleware
 import os
 from pathlib import Path
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 app = FastAPI(title="Project Manager API")
 
@@ -21,39 +22,73 @@ print(f"📁 BASE_DIR: {BASE_DIR}")
 print(f"📁 APP_DIR: {APP_DIR}")
 print(f"📁 STATIC_DIR: {STATIC_DIR}")
 print(f"📁 TEMPLATES_DIR: {TEMPLATES_DIR}")
-print(f"📁 Existe static?: {STATIC_DIR.exists()}")
-print(f"📁 Existe templates?: {TEMPLATES_DIR.exists()}")
 
-# Configurar templates Jinja2 - CORREGIDO
+# Configurar templates Jinja2 con contexto para URLs
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Montar archivos estáticos - CORREGIDO PARA RAILWAY
+# Añadir variable global para URLs base
+templates.env.globals["url_base"] = os.getenv("RAILWAY_STATIC_URL", "")
+
+# Middleware para HTTPS en producción
+if os.getenv("RAILWAY_ENVIRONMENT") == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+# Montar archivos estáticos
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     print("✅ Archivos estáticos montados en /static")
 else:
-    # Si no encuentra static, crearlo
-    print("⚠️  Directorio static no encontrado, intentando crear...")
     STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
-# Middleware de sesión - ASEGURAR QUE SECRET_KEY ESTÁ DEFINIDA
+# Middleware de sesión
 secret_key = os.getenv("SECRET_KEY")
 if not secret_key:
-    print("⚠️  SECRET_KEY no encontrada en variables de entorno, usando temporal")
     secret_key = "clave_temporal_123_" + os.urandom(16).hex()
     
-app.add_middleware(SessionMiddleware, secret_key=secret_key, session_cookie="session")
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=secret_key, 
+    session_cookie="session",
+    same_site="lax",
+    https_only=True  # Importante para Railway
+)
 
 # Incluir rutas del controlador
 app.include_router(router)
+
+# ========== FUNCIÓN PARA GENERAR URLS CORRECTAS ==========
+
+def get_base_url(request: Request):
+    """Obtiene la URL base correcta (HTTPS)"""
+    if os.getenv("RAILWAY_ENVIRONMENT") == "production":
+        # Forzar HTTPS en producción
+        base_url = str(request.base_url).replace("http://", "https://")
+    else:
+        base_url = str(request.base_url)
+    return base_url.rstrip("/")
+
+# ========== MIDDLEWARE PARA AÑADIR CONTEXTO ==========
+
+@app.middleware("http")
+async def add_https_context(request: Request, call_next):
+    """Middleware para añadir contexto HTTPS a las plantillas"""
+    response = await call_next(request)
+    
+    # Si es una respuesta de template, añadir variable
+    if hasattr(request.state, "template_context"):
+        context = request.state.template_context
+        context["base_url"] = get_base_url(request)
+        context["is_https"] = request.url.scheme == "https"
+    
+    return response
 
 # ========== RUTAS PARA SERVER HTML ==========
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_home(request: Request):
-    """Redirige a login si no está autenticado, sino a dashboard"""
+    """Redirige a login si no está autenticado"""
     if "usuario" not in request.session:
-        return RedirectResponse(url="/login")
+        return RedirectResponse(url="/login", status_code=303)
     
     from app.repository.crud import obtener_usuario_por_id
     from app.config.database import SessionLocal
@@ -71,26 +106,37 @@ async def serve_home(request: Request):
         stats = obtener_resumen_financiero(db, usuario_id)
         db.close()
         
-        return templates.TemplateResponse(
-            "dashboard.html",
-            {
-                "request": request,
-                "usuario": usuario,
-                "fecha_actual": datetime.now(),
-                "stats": stats
-            }
-        )
+        # Añadir contexto para URLs
+        context = {
+            "request": request,
+            "usuario": usuario,
+            "fecha_actual": datetime.now(),
+            "stats": stats,
+            "base_url": get_base_url(request),
+            "static_path": "/static"  # Ruta relativa directa
+        }
+        
+        # Guardar contexto para middleware
+        request.state.template_context = context
+        
+        return templates.TemplateResponse("dashboard.html", context)
     return RedirectResponse(url="/login")
 
 @app.get("/login", response_class=HTMLResponse)
 async def serve_login(request: Request):
     """Sirve página de login"""
     if "usuario" in request.session:
-        return RedirectResponse(url="/")
+        return RedirectResponse(url="/", status_code=303)
     
-    return templates.TemplateResponse("login.html", {"request": request})
+    context = {
+        "request": request,
+        "base_url": get_base_url(request),
+        "static_path": "/static"
+    }
+    request.state.template_context = context
+    return templates.TemplateResponse("login.html", context)
 
-# Health check mejorado
+# Health check
 @app.get("/health")
 async def health_check():
     import datetime
@@ -100,10 +146,8 @@ async def health_check():
         "status": "healthy",
         "message": "FastAPI is running on Railway",
         "timestamp": datetime.datetime.now().isoformat(),
-        "environment": os.getenv("RAILWAY_ENVIRONMENT", "unknown"),
-        "static_files": str(STATIC_DIR.exists()),
-        "templates": str(TEMPLATES_DIR.exists()),
-        "base_dir": str(BASE_DIR),
+        "environment": os.getenv("RAILWAY_ENVIRONMENT", "development"),
+        "https_enabled": True,
         "static_dir": str(STATIC_DIR)
     }
 

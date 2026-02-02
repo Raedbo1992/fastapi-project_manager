@@ -3,9 +3,10 @@
 {% block title %}Dashboard - Mis Finanzas{% endblock %}
 
 {% block head %}
-<!-- CORREGIDO: Usar url_for correctamente -->
-<link rel="stylesheet" href="{{ url_for('static', path='style_dashboard.css') }}?v=1.0">
+<!-- USAR RUTA RELATIVA DIRECTA -->
+<link rel="stylesheet" href="/static/style_dashboard.css?v=1.1">
 
+<!-- CDNs con HTTPS (ya los tienes) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
