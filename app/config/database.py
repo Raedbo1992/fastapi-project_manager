@@ -1,32 +1,39 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 import os
 
-# OBTENER VARIABLES DE ENTORNO DE RAILWAY
-DB_HOST = os.getenv("MYSQLHOST", "mysql.railway.internal")  # ← CRÍTICO
-DB_PORT = os.getenv("MYSQLPORT", "3306")
-DB_USER = os.getenv("MYSQLUSER", "root")
-DB_PASSWORD = os.getenv("MYSQLPASSWORD", "")
-DB_NAME = os.getenv("MYSQLDATABASE", "project_manager")
+load_dotenv()
 
-# CONSTRUIR URL DE CONEXIÓN
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+def get_database_url():
+    """Obtiene la URL de la base de datos para cualquier entorno"""
+    # 1. DATABASE_URL de variables de entorno
+    database_url = os.getenv("DATABASE_URL")
+    
+    if not database_url:
+        # 2. Si no hay DATABASE_URL, usar SQLite local
+        print("⚠️ DATABASE_URL no encontrada. Usando SQLite para desarrollo local.")
+        return "sqlite:///./project_manager.db"
+    
+    # 3. Corregir postgres:// a postgresql:// para SQLAlchemy
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    print(f"🔗 Database URL configurada: {database_url[:50]}...")  # Mostrar solo parte por seguridad
+    return database_url
 
-print("=" * 50)
-print("🔧 CONFIGURACIÓN DE BASE DE DATOS:")
-print(f"   Host: {DB_HOST}")
-print(f"   Puerto: {DB_PORT}")
-print(f"   Usuario: {DB_USER}")
-print(f"   Base de datos: {DB_NAME}")
-print(f"   URL: mysql+pymysql://{DB_USER}:****@{DB_HOST}:{DB_PORT}/{DB_NAME}")
-print("=" * 50)
+SQLALCHEMY_DATABASE_URL = get_database_url()
+
+# Configurar parámetros específicos para SQLite
+connect_args = {}
+if "sqlite" in SQLALCHEMY_DATABASE_URL:
+    connect_args = {"check_same_thread": False}
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    echo=True  # ← ACTIVAR PARA DEBUG
+    connect_args=connect_args,
+    pool_pre_ping=True if "postgresql" in SQLALCHEMY_DATABASE_URL else False
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

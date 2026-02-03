@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List
 from sqlalchemy import Column, Integer, String, Text, Enum, ForeignKey, Boolean, Date, DateTime, DECIMAL, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.config.database import Base
@@ -28,18 +28,15 @@ class Usuario(Base):
     email = Column(String(255), unique=True, nullable=False)
     username = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
-    rol = Column(String(50), default="user")  # ← AGREGADO
-    fecha_registro = Column(DateTime, default=datetime.utcnow)  # ← AGREGADO
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relaciones
     categorias = relationship("Categoria", back_populates="usuario", cascade="all, delete-orphan")
     gastos = relationship("Gasto", back_populates="usuario", cascade="all, delete-orphan")
-    ingresos = relationship("Ingreso", back_populates="usuario", cascade="all, delete-orphan")
+    ingresos = relationship("Ingreso", back_populates="usuario", cascade="all, delete-orphan")  # ✅ Relación con Ingreso
     contrasenas = relationship("Contrasena", back_populates="usuario_rel", cascade="all, delete-orphan")
     cumpleanos = relationship("Cumpleano", back_populates="usuario", cascade="all, delete-orphan")
-
 # ----------------------------------------
 # 📌 Modelo Categoria
 # ----------------------------------------
@@ -58,7 +55,7 @@ class Categoria(Base):
     # Relaciones
     usuario = relationship("Usuario", back_populates="categorias")
     gastos = relationship("Gasto", back_populates="categoria", cascade="all, delete-orphan")
-    ingresos = relationship("Ingreso", back_populates="categoria", cascade="all, delete-orphan")
+    ingresos = relationship("Ingreso", back_populates="categoria", cascade="all, delete-orphan")  # ✅ Se agregó para que funcione Ingreso
 
 # ----------------------------------------
 # 📌 Modelo Gasto
@@ -97,7 +94,7 @@ class Ingreso(Base):
 
     # Relaciones
     usuario = relationship("Usuario", back_populates="ingresos")
-    categoria = relationship("Categoria", back_populates="ingresos")
+    categoria = relationship("Categoria", back_populates="ingresos")  # ✅ Ahora sí existe en Categoria
 
 # ----------------------------------------
 # 📌 Esquemas Pydantic para Ingreso
@@ -126,9 +123,9 @@ class Pendiente(Base):
     recordatorio = Column(DateTime(timezone=True))
     usuario_id = Column(Integer, ForeignKey('usuarios.id'), nullable=False)
 
-# ----------------------------------------
-# 📌 Dashboard Stats (Pydantic)
-# ----------------------------------------
+
+from typing import Union  # Añade esto al inicio de tus imports
+
 class DashboardStats(BaseModel):
     salario_actual: float
     total_gastos: float
@@ -139,7 +136,7 @@ class DashboardStats(BaseModel):
     variacion_ingresos: float = 0.0
     variacion_gastos: float = 0.0
     porcentaje_ahorro: float = 0.0
-    categoria_mayor: Dict[str, Union[str, float]] = {
+    categoria_mayor: Dict[str, Union[str, float]] = {  # Cambiado para aceptar string o float
         'nombre': 'Ninguna',
         'valor': 0.0,
         'porcentaje': 0.0
@@ -155,6 +152,7 @@ class DashboardStats(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 # ----------------------------------------
 # 📌 Modelo Contraseña
 # ----------------------------------------
@@ -162,20 +160,23 @@ class Contrasena(Base):
     __tablename__ = "contrasenas"
     
     id = Column(Integer, primary_key=True, index=True)
-    servicio = Column(String(100), index=True)  # ← CORREGIDO: agregada longitud
-    usuario = Column(String(100))  # ← CORREGIDO: agregada longitud
-    contrasena_encriptada = Column(String(500))  # ← CORREGIDO: agregada longitud
-    url = Column(String(500), nullable=True)  # ← CORREGIDO: agregada longitud
-    notas = Column(Text, nullable=True)  # ← CORREGIDO: Text en lugar de String
+    servicio = Column(String, index=True)
+    usuario = Column(String)
+    contrasena_encriptada = Column(String)  # Este campo debe llamarse así
+    url = Column(String, nullable=True)
+    notas = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"))
     
     # Relación
     usuario_rel = relationship("Usuario", back_populates="contrasenas")
+    
+# Agrega esta relación al modelo Usuario
+# En la clase Usuario, añade:
+contrasenas = relationship("Contrasena", back_populates="usuario_rel", cascade="all, delete-orphan")
 
-# ----------------------------------------
-# 📌 Modelo Cumpleaño
-# ----------------------------------------
+
+# 🎂 AGREGAR ESTA CLASE AL FINAL
 class Cumpleano(Base):
     __tablename__ = "cumpleanos"
     
@@ -193,7 +194,6 @@ class Cumpleano(Base):
     
     # Relación
     usuario = relationship("Usuario", back_populates="cumpleanos")
-
 # ----------------------------------------
 # 📌 Configuración explícita de mapeadores
 # ----------------------------------------
