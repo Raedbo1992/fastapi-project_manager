@@ -3,7 +3,7 @@
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #1f1f2e, #2e3a59);
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
   background-size: 400% 400%;
   animation: backgroundShift 20s ease infinite;
 }
@@ -14,19 +14,20 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-.login-container {
-  height: 100vh;
+.register-container {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px 0;
 }
 
-.login-card {
+.register-card {
   background: #ffffff;
   padding: 36px 32px;
   border-radius: 16px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-  max-width: 400px;
+  max-width: 450px;
   width: 100%;
   animation: fadeIn 1s ease;
   text-align: center;
@@ -37,11 +38,11 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.lock-icon {
+.user-icon {
   margin-bottom: 16px;
 }
 
-.lock {
+.user-plus {
   width: 48px;
   height: 48px;
   fill: #1b1f3b;
@@ -54,28 +55,42 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-.login-title {
+.register-title {
   font-size: 24px;
   font-weight: 600;
   color: #333;
   margin-bottom: 6px;
 }
 
-.login-subtitle {
+.register-subtitle {
   font-size: 14px;
   color: #666;
   margin-bottom: 26px;
 }
 
-.login-error {
+.register-error {
   color: #e74c3c;
   font-size: 14px;
   margin-bottom: 15px;
+  padding: 10px;
+  background: #fee;
+  border-radius: 6px;
+  border-left: 3px solid #e74c3c;
+}
+
+.register-success {
+  color: #27ae60;
+  font-size: 14px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #efe;
+  border-radius: 6px;
+  border-left: 3px solid #27ae60;
 }
 
 .input-group {
   text-align: left;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .input-group label {
@@ -83,6 +98,7 @@ body {
   margin-bottom: 6px;
   color: #444;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .input-icon {
@@ -105,6 +121,7 @@ body {
   border-radius: 8px;
   border: 1px solid #ccc;
   transition: all 0.3s ease;
+  font-size: 14px;
 }
 
 .input-icon input:focus {
@@ -113,12 +130,11 @@ body {
   outline: none;
 }
 
-/* Botón refinado */
 /* ======================= */
-/* BOTÓN LOGIN REFINADO */
+/* BOTÓN REGISTRAR */
 /* ======================= */
 
-.login-btn {
+.register-btn {
   width: 100%;
   padding: 0.7rem 0;
   font-weight: 600;
@@ -134,71 +150,59 @@ body {
     transform 0.25s ease,
     box-shadow 0.25s ease,
     background 0.25s ease;
+  margin-top: 10px;
 }
 
-/* Hover */
-.login-btn:hover {
+.register-btn:hover {
   background: linear-gradient(135deg, #1b1f3b, #3a3fa0);
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 10px 26px rgba(0,0,0,0.45);
 }
 
-/* Active */
-.login-btn:active {
+.register-btn:active {
   transform: translateY(-1px) scale(0.98);
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
-
 /* ======================= */
-/* SECCIÓN DE REGISTRO */
+/* SECCIÓN DE LOGIN */
 /* ======================= */
 
-.register-section {
+.login-section {
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid #e0e0e0;
   text-align: center;
 }
 
-.register-text {
+.login-text {
   font-size: 14px;
   color: #666;
   margin-bottom: 12px;
 }
 
-.register-link {
+.login-link {
   display: inline-block;
   padding: 10px 24px;
   font-weight: 600;
   font-size: 14px;
-  color: #4c51bf;
-  background: linear-gradient(135deg, #f0f4ff, #e8eeff);
-  border: 1.5px solid #4c51bf;
+  color: #27ae60;
+  background: linear-gradient(135deg, #f0fff4, #e8f5e9);
+  border: 1.5px solid #27ae60;
   border-radius: 8px;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(76, 81, 191, 0.15);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.15);
 }
 
-.register-link:hover {
-  background: linear-gradient(135deg, #4c51bf, #5a67d8);
+.login-link:hover {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
   color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(76, 81, 191, 0.3);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
 }
 
-.register-link:active {
+.login-link:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(76, 81, 191, 0.2);
-}
-
-.login-success {
-  color: #27ae60;
-  font-size: 14px;
-  margin-bottom: 15px;
-  padding: 10px;
-  background: #efe;
-  border-radius: 6px;
-  border-left: 3px solid #27ae60;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
 }

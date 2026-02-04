@@ -1,0 +1,87 @@
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='style_register.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+  <div class="register-card">
+    <!-- Ícono de usuario nuevo -->
+    <div class="user-icon">
+      <svg viewBox="0 0 24 24" class="user-plus">
+        <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+      </svg>
+    </div>
+
+    <h2 class="register-title">Crear cuenta nueva</h2>
+    <p class="register-subtitle">Completa tus datos para registrarte</p>
+
+    {% if error %}
+      <p class="register-error">{{ error }}</p>
+    {% endif %}
+
+    {% if success %}
+      <p class="register-success">{{ success }}</p>
+    {% endif %}
+
+    <form method="post" action="/register">
+      <div class="input-group">
+        <label for="nombre">Nombre completo</label>
+        <div class="input-icon">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-14a3 3 0 0 0-3 3h2a1 1 0 1 1 2 0c0 1.33-2 1.67-2 3v1h2v-.5c0-1 2-1.17 2-3.5a3 3 0 0 0-3-3z"/>
+          </svg>
+          <input type="text" id="nombre" name="nombre" required autofocus>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="username">Usuario</label>
+        <div class="input-icon">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 12c2.67 0 8 1.34 8 4v3H4v-3c0-2.66 5.33-4 8-4zM12 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/>
+          </svg>
+          <input type="text" id="username" name="username" required>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="email">Correo electrónico</label>
+        <div class="input-icon">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+          <input type="email" id="email" name="email" required>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="password">Contraseña</label>
+        <div class="input-icon">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 17a2 2 0 1 0 .001-4.001A2 2 0 0 0 12 17zm6-5V9a6 6 0 0 0-12 0v3H4v10h16V12h-2zM8 9a4 4 0 1 1 8 0v3H8V9z"/>
+          </svg>
+          <input type="password" id="password" name="password" required minlength="6">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="confirm_password">Confirmar contraseña</label>
+        <div class="input-icon">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+          <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+        </div>
+      </div>
+
+      <button type="submit" class="register-btn">✨ Crear cuenta</button>
+    </form>
+
+    <!-- Botón de volver al login -->
+    <div class="login-section">
+      <p class="login-text">¿Ya tienes cuenta?</p>
+      <a href="/login" class="login-link">🔐 Iniciar sesión</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

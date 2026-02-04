@@ -59,6 +59,68 @@ def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/", status_code=303)
 
+
+# Ruta para mostrar el formulario de registro
+@router.get("/register", response_class=HTMLResponse)
+def mostrar_register(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+# Ruta para procesar el registro
+@router.post("/register")
+async def register(
+    request: Request,
+    nombre: str = Form(...),
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    # Validar que las contraseñas coincidan
+    if password != confirm_password:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "Las contraseñas no coinciden"
+        })
+    
+    # Validar que el username no exista
+    usuario_existente = crud.obtener_usuario_por_username(db, username)
+    if usuario_existente:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "El nombre de usuario ya está en uso"
+        })
+    
+    # Validar que el email no exista
+    email_existente = crud.obtener_usuario_por_email(db, email)
+    if email_existente:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "El correo electrónico ya está registrado"
+        })
+    
+    # Crear el nuevo usuario
+    try:
+        nuevo_usuario = schemas.UsuarioCreate(
+            nombre=nombre,
+            username=username,
+            email=email,
+            password=password
+        )
+        crud.crear_usuario(db, nuevo_usuario)
+        
+        # Redirigir al login con mensaje de éxito
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "success": "¡Cuenta creada exitosamente! Inicia sesión con tus credenciales"
+        })
+    except Exception as e:
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": f"Error al crear la cuenta: {str(e)}"
+        })
+    
+    
 # Dashboard
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_db)):
