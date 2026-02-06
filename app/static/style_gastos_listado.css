@@ -1,457 +1,896 @@
 /* =========================
-   Contenido principal
+   VARIABLES
    ========================= */
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  background-color: #f4f6f8;
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --bg: #f8fafc;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --radius: 12px;
 }
 
 /* =========================
-   Cabecera sección
+   BASE
+   ========================= */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.main-content {
+  padding: 0;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.page-container {
+  max-width: 100%;
+  padding: 1rem;
+}
+
+/* =========================
+   HEADER
    ========================= */
 .gastos-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  gap: 1rem;
 }
 
 .gastos-header h2 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0;
+  gap: 0.5rem;
 }
 
-/* Botón nuevo */
-.btn-nuevo,
-.form-actions .btn-guardar {
-  background: linear-gradient(135deg, #0f0f14, #2a2f5a);
-  color: #ffffff;
-  padding: 0.65rem 1.6rem;
+.gastos-header h2 i {
+  color: var(--danger);
+}
+
+.btn-nuevo {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
+  padding: 0.7rem 1.3rem;
   border-radius: 10px;
-  font-size: 0.95rem;
-  letter-spacing: 0.3px;
+  font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s;
   white-space: nowrap;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  cursor: pointer;
-  transition: 
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease;
+  min-height: 44px;
 }
 
-
-/* Hover */
-.btn-nuevo:hover,
-.form-actions .btn-guardar:hover {
-  background: linear-gradient(135deg, #1b1f3b, #3a3fa0);
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+.btn-nuevo:active {
+  transform: scale(0.97);
 }
-
-/* Active */
-.btn-nuevo:active,
-.form-actions .btn-guardar:active {
-  transform: translateY(-1px) scale(0.98);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
 
 /* =========================
-   Filtros
+   FILTROS
    ========================= */
 .filtros-container {
-  background: #fff;
-  padding: 12px 16px;
-  border-radius: 8px;
-  display: flex;
-  gap: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  background: var(--white);
+  padding: 0.75rem;
+  border-radius: var(--radius);
   margin-bottom: 1rem;
-  overflow-x: auto;
+  box-shadow: var(--shadow-sm);
 }
 
 .filtros-form {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  width: 100%;
+  gap: 0.5rem;
 }
 
 .filtro-item {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #f8f9fa;
-  padding: 6px 12px;
-  border-radius: 6px;
+  gap: 0.5rem;
+  background: #f8fafc;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
 }
 
-.filtro-item i { 
-  color: #495057; 
-  font-size: 1rem; 
+.filtro-item i {
+  color: var(--text-light);
   flex-shrink: 0;
 }
 
 .filtro-item select {
+  flex: 1;
   border: none;
   background: transparent;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 500;
   outline: none;
   cursor: pointer;
-  color: #495057;
-}
-
-.filtro-item select:focus { 
-  outline: none; 
+  min-height: 24px;
 }
 
 /* =========================
-   Tabla
+   SCROLL HINT - MEJORADO
    ========================= */
-.tabla-scroll { 
-  overflow-x: auto; 
-  width: 100%; 
+.scroll-hint {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  animation: pulse 2s infinite;
+  transition: opacity 0.3s;
+  cursor: pointer;
+  user-select: none;
+}
+
+.scroll-hint:hover {
+  opacity: 0.9;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.scroll-hint i {
+  font-size: 1rem;
+  animation: slide 1.5s infinite;
+}
+
+@keyframes slide {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+/* =========================
+   TABLA - SCROLL OPTIMIZADO
+   ========================= */
+.tabla-wrapper {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
   margin-bottom: 1rem;
+  position: relative;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  position: relative;
+  width: 100%;
+}
+
+/* Scrollbar personalizada - MEJORADA */
+.tabla-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.tabla-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.tabla-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 2px solid #f1f5f9;
+}
+
+.tabla-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .tabla-gastos {
   width: 100%;
-  border-collapse: collapse;
-  background: #ffffff;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  min-width: 900px;
 }
 
-.tabla-gastos thead { 
-  background: #2c3e50; 
-  color: white; 
-}
-
-.tabla-gastos th, 
-.tabla-gastos td {
-  padding: 12px 15px;
-  text-align: left;
-  white-space: nowrap;
-  border-bottom: 1px solid #eee;
+/* =========================
+   THEAD
+   ========================= */
+.tabla-gastos thead {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .tabla-gastos th {
+  padding: 1rem;
+  text-align: left;
   font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0.3px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
+/* =========================
+   TBODY
+   ========================= */
+.tabla-gastos td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
 
 .tabla-gastos tbody tr {
-  transition: background-color 0.2s ease;
+  transition: background 0.15s;
 }
 
-.tabla-gastos tbody tr:hover { 
-  background-color: #f7fbfd; 
+.tabla-gastos tbody tr:hover {
+  background: #f8fafc;
 }
 
 .tabla-gastos tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* =========================
-   Badges
-   ========================= */
-.tipo-badge { 
-  font-size: 0.72rem; 
-  padding: 3px 6px; 
-  border-radius: 6px; 
-  margin-left: 8px; 
-  background: #ecf0f1;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-block;
+.tabla-gastos tbody tr.pagado {
+  background: linear-gradient(to right, #f0fdf4 0%, #ffffff 8%);
 }
 
-.tipo-badge.fijo { 
-  background: #3498db; 
-  color: white; 
-}
-
-.tipo-badge.variable { 
-  background: #f39c12; 
-  color: white; 
-}
-
-.tipo-badge.opcional { 
-  background: #9b59b6; 
-  color: white; 
-}
-
-.estado-badge { 
-  font-size: 0.82rem; 
-  padding: 4px 8px; 
-  border-radius: 6px; 
-  font-weight: 600;
-  display: inline-block;
-}
-
-.estado-badge.pagado { 
-  background: #2ecc71; 
-  color: white; 
-}
-
-.estado-badge.pendiente { 
-  background: #e74c3c; 
-  color: white; 
+.tabla-gastos tbody tr.pendiente {
+  background: linear-gradient(to right, #fef2f2 0%, #ffffff 8%);
 }
 
 /* =========================
-   Categoría con alineación
+   COLUMNAS FIJAS (STICKY) - SOLO EN PC
    ========================= */
-.categoria-cell-inline {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
-  min-width: 180px;
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: inherit !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
 }
 
-.categoria-nombre {
+.tabla-gastos thead .sticky-col {
+  z-index: 15;
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+}
+
+.sticky-actions {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+  background: inherit !important;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.06);
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.tabla-gastos thead .sticky-actions {
+  z-index: 15;
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+}
+
+/* Header de acciones más pequeño */
+.acciones-header {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+/* =========================
+   CELDAS ESPECÍFICAS
+   ========================= */
+.categoria-cell {
+  font-weight: 600;
+  color: var(--text);
+  max-width: 140px;
+}
+
+.valor-cell {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 1rem;
   white-space: nowrap;
+}
+
+.fecha-cell {
+  color: var(--text-light);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.notas-cell {
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 500;
+  white-space: nowrap;
+  color: var(--text-light);
+  font-size: 0.85rem;
 }
 
 /* =========================
-   Acciones
+   BADGES
+   ========================= */
+.badge-tipo {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.badge-tipo.fijo {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-tipo.variable {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-tipo.opcional {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.estado-badge.pagado {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.estado-badge.pendiente {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* =========================
+   ACCIONES - ESTILO ORIGINAL DE INGRESOS
    ========================= */
 .acciones {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   justify-content: center;
 }
 
-.btn-icon { 
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center; 
-  width: 34px; 
-  height: 34px; 
-  border-radius: 50%; 
-  color: white; 
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   cursor: pointer;
 }
 
-.btn-icon.edit { 
-  background: #2980b9; 
+.btn-icon.edit {
+  background: var(--primary);
 }
 
-.btn-icon.delete { 
-  background: #c0392b; 
+.btn-icon.delete {
+  background: var(--danger);
 }
 
-.btn-icon:hover { 
-  transform: scale(1.1); 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.btn-icon:active {
+  transform: scale(0.9);
 }
 
 .btn-icon i {
-  font-size: 14px;
+  font-size: 0.85rem;
 }
 
 /* =========================
-   Paginación
+   NO DATA
+   ========================= */
+.no-data {
+  text-align: center;
+  padding: 3rem !important;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+.no-data i {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+/* =========================
+   PAGINACIÓN
    ========================= */
 .paginacion {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-  margin: 20px 0;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.pag-info-mobile {
+  display: none;
+}
+
+.pag-numbers {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
 }
 
 .pag-btn {
-  padding: 8px 14px;
-  border: 1px solid #ccc;
-  background: #f8f8f8;
-  color: #333;
-  border-radius: 4px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0.5rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
   text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  min-width: 36px;
-  text-align: center;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.pag-btn:hover:not(.disabled) {
-  background: #e0e0e0;
-  border-color: #999;
-  transform: translateY(-1px);
+  transition: all 0.2s;
 }
 
 .pag-btn.active {
-  background: #007bff;
+  background: var(--primary);
   color: white;
-  border-color: #007bff;
-  font-weight: 600;
+  border-color: var(--primary);
 }
 
 .pag-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.3;
   pointer-events: none;
 }
 
-.pag-btn i {
-  font-size: 12px;
+.pag-btn:not(.disabled):active {
+  transform: scale(0.95);
+}
+
+.pag-dots {
+  color: var(--text-light);
+  font-weight: bold;
+  padding: 0 0.25rem;
+}
+
+.pag-nav i {
+  font-size: 1rem;
 }
 
 /* =========================
-   Responsive
+   RESPONSIVE - TABLET
    ========================= */
-@media (max-width: 768px) {
-  .main-content {
-    padding: 1.5rem 1rem;
+@media (max-width: 1024px) {
+  .page-container {
+    padding: 1rem 0.75rem;
   }
 
+  .tabla-gastos {
+    min-width: 850px;
+  }
+
+  .tabla-gastos th,
+  .tabla-gastos td {
+    padding: 0.8rem;
+  }
+  
+  /* Ajustes de acciones en tablet */
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+  }
+  
+  .btn-icon {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .btn-icon i {
+    font-size: 0.8rem;
+  }
+}
+
+/* =========================
+   RESPONSIVE - MOBILE (768px)
+   ========================= */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Header móvil */
   .gastos-header {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
+    margin-bottom: 0.85rem;
   }
 
   .gastos-header h2 {
-    justify-content: center;
     font-size: 1.3rem;
   }
 
   .btn-nuevo {
-    justify-content: center;
-    width: 100%;
+    padding: 0.65rem 1.1rem;
+    font-size: 0.85rem;
   }
 
+  /* Filtros móvil */
   .filtros-container {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .filtros-form {
-    flex-direction: column;
-    gap: 8px;
+    padding: 0.65rem;
+    margin-bottom: 0.85rem;
   }
 
   .filtro-item {
-    width: 100%;
+    padding: 0.55rem 0.85rem;
   }
 
   .filtro-item select {
-    flex: 1;
+    font-size: 0.85rem;
   }
 
-  /* Categoría responsive */
-  .categoria-cell-inline {
-    grid-template-columns: 1fr;
-    gap: 4px;
-    min-width: auto;
+  /* Scroll hint más visible en móvil */
+  .scroll-hint {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.65rem;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
   }
 
-  .categoria-nombre {
-    display: block;
+  /* TABLA MÓVIL - QUITAR COLUMNAS FIJAS */
+  .tabla-gastos {
+    min-width: 700px;
+    font-size: 0.85rem;
   }
 
-  .tipo-badge {
-    justify-self: start;
-    margin-left: 0;
+  .tabla-gastos th {
+    padding: 0.75rem 0.65rem;
+    font-size: 0.7rem;
   }
-}
 
-@media (max-width: 600px) {
-  .tabla-gastos { 
-    min-width: 520px; 
+  .tabla-gastos td {
+    padding: 0.7rem 0.65rem;
+  }
+
+  /* QUITAR EFECTO STICKY EN MÓVIL */
+  .sticky-col,
+  .sticky-actions {
+    position: static !important;
+    box-shadow: none !important;
+    background: inherit !important;
+    width: auto !important;
+    min-width: auto !important;
+    max-width: auto !important;
+  }
+
+  .tabla-gastos thead .sticky-col,
+  .tabla-gastos thead .sticky-actions {
+    position: static !important;
+    background: linear-gradient(135deg, #1e293b, #334155) !important;
+  }
+
+  /* Ajustar celdas específicas */
+  .categoria-cell {
+    max-width: 140px;
+    font-size: 0.85rem;
+  }
+
+  .valor-cell {
+    font-size: 0.9rem;
+  }
+
+  .notas-cell {
+    max-width: 150px;
+    font-size: 0.8rem;
+  }
+
+  .badge-tipo {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+
+  .estado-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
   }
   
-  .tabla-gastos th, 
-  .tabla-gastos td { 
-    padding: 8px 10px; 
-    font-size: 13px; 
+  /* ACCIONES EN MÓVIL */
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
+  }
+  
+  .acciones-header {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.3px;
+  }
+  
+  .acciones {
+    gap: 0.3rem;
+  }
+  
+  .btn-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px;
+    min-height: 30px;
+  }
+  
+  .btn-icon i {
+    font-size: 0.7rem !important;
   }
 
-  .btn-nuevo { 
-    padding: 0.5rem 1rem; 
-    font-size: 0.85rem; 
+  /* Scrollbar más visible en móvil */
+  .tabla-scroll::-webkit-scrollbar {
+    height: 12px;
+  }
+
+  .tabla-scroll::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+  }
+
+  /* Paginación móvil */
+  .pag-numbers {
+    display: none;
+  }
+
+  .pag-info-mobile {
+    display: block;
+    background: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text);
+    min-width: 80px;
+    text-align: center;
   }
 
   .pag-btn {
-    padding: 6px 10px;
-    font-size: 12px;
-    min-width: 32px;
-  }
-
-  .btn-icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .btn-icon i {
-    font-size: 12px;
-  }
-
-  .tipo-badge,
-  .estado-badge {
-    font-size: 0.7rem;
-    padding: 2px 5px;
-  }
-
-  .categoria-cell-inline {
-    min-width: 140px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
-@media (max-width: 480px) {
-  .main-content {
-    padding: 1rem 0.5rem;
-  }
-
-  .tabla-gastos th, 
-  .tabla-gastos td { 
-    padding: 6px 8px; 
-    font-size: 12px; 
+/* =========================
+   RESPONSIVE - MOBILE SMALL (428px)
+   ========================= */
+@media (max-width: 428px) {
+  .page-container {
+    padding: 0.6rem 0.4rem;
   }
 
   .gastos-header h2 {
     font-size: 1.2rem;
   }
+
+  .gastos-header h2 i {
+    font-size: 1.1rem;
+  }
+
+  .btn-nuevo {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .tabla-gastos {
+    min-width: 650px;
+  }
+
+  .tabla-gastos th {
+    padding: 0.65rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .tabla-gastos td {
+    padding: 0.65rem 0.5rem;
+  }
+
+  .scroll-hint {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.8rem;
+  }
+  
+  /* ACCIONES MÁS COMPACTAS */
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 95px !important;
+    min-width: 95px !important;
+    max-width: 95px !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+  }
+  
+  .acciones-header {
+    font-size: 0.65rem !important;
+  }
+  
+  .btn-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px;
+    min-height: 28px;
+  }
+  
+  .btn-icon i {
+    font-size: 0.65rem !important;
+  }
+  
+  /* Reducir otras celdas */
+  .categoria-cell {
+    max-width: 120px;
+    font-size: 0.8rem;
+  }
+  
+  .notas-cell {
+    max-width: 130px;
+    font-size: 0.75rem;
+  }
+  
+  .valor-cell {
+    font-size: 0.85rem;
+  }
+  
+  .fecha-cell {
+    font-size: 0.75rem;
+  }
 }
 
 /* =========================
-   Fondo neutro y profesional
+   RESPONSIVE - MÓVIL MUY PEQUEÑO (360px)
    ========================= */
-.tabla-gastos tbody tr {
-    background-color: #ffffff; /* Blanco puro */
+@media (max-width: 360px) {
+  .tabla-gastos {
+    min-width: 600px;
+  }
+  
+  .tabla-gastos th {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.6rem;
+  }
+  
+  .tabla-gastos td {
+    padding: 0.6rem 0.4rem;
+  }
+  
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+  }
+  
+  .btn-icon {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  
+  .btn-icon i {
+    font-size: 0.6rem !important;
+  }
 }
 
-.tabla-gastos tbody tr:nth-child(even) {
-    background-color: #f8f9fa; /* Gris muy claro */
+/* =========================
+   OPTIMIZACIONES iOS
+   ========================= */
+@supports (-webkit-touch-callout: none) {
+  .tabla-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+  
+  .tabla-scroll > .tabla-gastos {
+    scroll-snap-align: start;
+  }
+  
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
-.tabla-gastos tbody tr:hover {
-    background-color: #e7f3ff !important; /* Azul clarito al hover */
+/* =========================
+   MEJORAS ACCESIBILIDAD
+   ========================= */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Touch targets mínimos */
+@media (hover: none) and (pointer: coarse) {
+  .btn-icon {
+    min-width: 30px !important;
+    min-height: 30px !important;
+  }
+  
+  .btn-nuevo,
+  .pag-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Asegurar que el scroll sea fácil en móviles */
+  .tabla-scroll {
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
+  }
+}
+
+/* =========================
+   AJUSTE BOTÓN NUEVO - MOBILE
+   ========================= */
+@media (max-width: 768px) {
+  .btn-nuevo {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    min-height: unset;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  }
+
+  .btn-nuevo i {
+    font-size: 0.85rem;
+  }
 }

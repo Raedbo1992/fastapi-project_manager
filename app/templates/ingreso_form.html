@@ -15,27 +15,69 @@
       {{ "Editar Ingreso" if ingreso else "Nuevo Ingreso" }}
     </h2>
 
-    <form method="post" action="/ingresos/guardar">
+    <!-- CORRECCIÓN: Asegúrate de que el action sea correcto -->
+    <form method="post" action="{{ '/ingresos/editar' if ingreso else '/ingresos/crear' }}">
       {% if ingreso %}
         <input type="hidden" name="id" value="{{ ingreso.id }}">
       {% endif %}
 
+      <!-- Categoría -->
+      <div class="form-group">
+        <label for="categoria"><i class="bi bi-tag"></i> Categoría</label>
+        <input type="text" name="categoria" id="categoria" 
+              value="{{ ingreso.categoria.nombre if ingreso and ingreso.categoria else '' }}" 
+              placeholder="Ej: Nómina, Honorarios" 
+              list="categorias-sugeridas"
+              required>
+        
+        <!-- Sugerencias de categorías existentes -->
+        <datalist id="categorias-sugeridas">
+          {% for cat in categorias_existentes %}
+            <option value="{{ cat.nombre }}">
+          {% endfor %}
+        </datalist>
+        
+        <small class="text-muted">
+          Categorías existentes: 
+          {% for cat in categorias_existentes[:3] %}
+            {{ cat.nombre }}{% if not loop.last %}, {% endif %}
+          {% endfor %}
+          {% if categorias_existentes|length > 3 %}...{% endif %}
+        </small>
+      </div>
+
       <!-- Valor -->
       <div class="form-group">
         <label for="valor"><i class="bi bi-currency-dollar"></i> Valor</label>
-        <input type="number" name="valor" id="valor" step="0.01" min="0" value="{{ ingreso.valor if ingreso else '' }}" required>
+        <input type="number" name="valor" id="valor" step="0.01" min="0" 
+              value="{{ ingreso.valor if ingreso else '' }}" 
+              placeholder="Ej: 1500000" required>
       </div>
 
-      <!-- En ingreso_form.html -->
-    <div class="form-group">
-      <label for="categoria"><i class="bi bi-tag"></i> Categoría</label>
-      <input type="text" name="categoria" id="categoria" value="Ingresos" required>
-    </div>
+      <!-- Tipo de ingreso -->
+      <div class="form-group">
+        <label for="tipo"><i class="bi bi-list"></i> Tipo</label>
+        <select name="tipo" id="tipo" required>
+          <option value="fijo" {% if ingreso and ingreso.categoria and ingreso.categoria.tipo == 'fijo' %}selected{% endif %}>Fijo</option>
+          <option value="variable" {% if ingreso and ingreso.categoria and ingreso.categoria.tipo == 'variable' %}selected{% endif %}>Variable</option>
+          <option value="opcional" {% if ingreso and ingreso.categoria and ingreso.categoria.tipo == 'opcional' %}selected{% endif %}>Opcional</option>
+        </select>
+      </div>
 
+      <!-- Estado (Recibido/Pendiente) -->
+      <div class="form-group">
+        <label for="estado"><i class="bi bi-check-circle"></i> Estado</label>
+        <select name="estado" id="estado" required>
+          <option value="pendiente" {% if ingreso and ingreso.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+          <option value="recibido" {% if ingreso and ingreso.estado == 'recibido' %}selected{% endif %}>Recibido</option>
+        </select>
+      </div>
+      
       <!-- Fecha -->
       <div class="form-group">
         <label for="fecha"><i class="bi bi-calendar"></i> Fecha</label>
-        <input type="date" name="fecha" id="fecha" value="{{ ingreso.fecha if ingreso else '' }}" required>
+        <input type="date" name="fecha" id="fecha" 
+              value="{{ ingreso.fecha if ingreso else hoy }}" required>
       </div>
 
       <!-- Notas -->
@@ -46,12 +88,16 @@
 
       <!-- Botones -->
       <div class="form-actions">
+        <a href="/ingresos" class="btn-cancelar">
+          <i class="bi bi-arrow-left"></i> Cancelar
+        </a>
         <button type="submit" class="btn-guardar">
           <i class="bi bi-save"></i> {{ "Actualizar" if ingreso else "Guardar" }}
         </button>
       </div>
+
+
     </form>
   </div>
 </div>
 {% endblock %}
-

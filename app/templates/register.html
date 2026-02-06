@@ -1,89 +1,178 @@
 {% block head %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="{{ url_for('static', path='style_register.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <div class="register-container">
   <div class="register-card">
-    <!-- Ícono de usuario nuevo -->
-    <div class="user-icon">
-      <svg viewBox="0 0 24 24" class="user-plus">
-        <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-      </svg>
+    
+    <!-- Cabecera con icono -->
+    <div class="register-header">
+      <div class="user-icon">
+        <svg viewBox="0 0 24 24" class="user-plus">
+          <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </div>
+      <h1 class="register-title">Crear cuenta nueva</h1>
+      <p class="register-subtitle">Completa tus datos para registrarte</p>
     </div>
 
-    <h2 class="register-title">Crear cuenta nueva</h2>
-    <p class="register-subtitle">Completa tus datos para registrarte</p>
-
+    <!-- Mensajes de error/éxito -->
     {% if error %}
-      <p class="register-error">{{ error }}</p>
+    <div class="alert alert-error">
+      <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ error }}</span>
+    </div>
     {% endif %}
 
     {% if success %}
-      <p class="register-success">{{ success }}</p>
+    <div class="alert alert-success" id="success-message">
+      <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ success }}</span>
+    </div>
     {% endif %}
 
-    <form method="post" action="/register">
+    <!-- Mostrar formulario solo si no hay éxito -->
+    {% if not success %}
+    <form method="post" action="/register" class="register-form">
+      
       <div class="input-group">
-        <label for="nombre">Nombre completo</label>
-        <div class="input-icon">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm0-14a3 3 0 0 0-3 3h2a1 1 0 1 1 2 0c0 1.33-2 1.67-2 3v1h2v-.5c0-1 2-1.17 2-3.5a3 3 0 0 0-3-3z"/>
-          </svg>
-          <input type="text" id="nombre" name="nombre" required autofocus>
+        <label for="nombre" class="form-label">Nombre completo</label>
+        <div class="input-wrapper">
+          <div class="input-icon">
+            <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+            <input 
+              type="text" 
+              id="nombre" 
+              name="nombre" 
+              placeholder="Ingresa tu nombre completo"
+              required 
+              autofocus
+              value="{{ nombre if nombre else '' }}"
+              autocomplete="name"
+            >
+          </div>
         </div>
       </div>
 
       <div class="input-group">
-        <label for="username">Usuario</label>
-        <div class="input-icon">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 12c2.67 0 8 1.34 8 4v3H4v-3c0-2.66 5.33-4 8-4zM12 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/>
-          </svg>
-          <input type="text" id="username" name="username" required>
+        <label for="username" class="form-label">Usuario</label>
+        <div class="input-wrapper">
+          <div class="input-icon">
+            <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+            <input 
+              type="text" 
+              id="username" 
+              name="username" 
+              placeholder="Elige un nombre de usuario"
+              required
+              value="{{ username if username else '' }}"
+              autocomplete="username"
+            >
+          </div>
         </div>
       </div>
 
       <div class="input-group">
-        <label for="email">Correo electrónico</label>
-        <div class="input-icon">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-          </svg>
-          <input type="email" id="email" name="email" required>
+        <label for="email" class="form-label">Correo electrónico</label>
+        <div class="input-wrapper">
+          <div class="input-icon">
+            <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+              <path fill-rule="evenodd" d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" clip-rule="evenodd" />
+            </svg>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="tu@email.com"
+              required
+              value="{{ email if email else '' }}"
+              autocomplete="email"
+            >
+          </div>
         </div>
       </div>
 
       <div class="input-group">
-        <label for="password">Contraseña</label>
-        <div class="input-icon">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 17a2 2 0 1 0 .001-4.001A2 2 0 0 0 12 17zm6-5V9a6 6 0 0 0-12 0v3H4v10h16V12h-2zM8 9a4 4 0 1 1 8 0v3H8V9z"/>
-          </svg>
-          <input type="password" id="password" name="password" required minlength="6">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-wrapper">
+          <div class="input-icon">
+            <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+            </svg>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              placeholder="Mínimo 6 caracteres"
+              required
+              minlength="6"
+              autocomplete="new-password"
+            >
+          </div>
         </div>
       </div>
 
       <div class="input-group">
-        <label for="confirm_password">Confirmar contraseña</label>
-        <div class="input-icon">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-          </svg>
-          <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+        <label for="confirm_password" class="form-label">Confirmar contraseña</label>
+        <div class="input-wrapper">
+          <div class="input-icon">
+            <svg class="icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+            </svg>
+            <input 
+              type="password" 
+              id="confirm_password" 
+              name="confirm_password" 
+              placeholder="Repite la contraseña"
+              required
+              minlength="6"
+              autocomplete="new-password"
+            >
+          </div>
         </div>
       </div>
 
-      <button type="submit" class="register-btn">✨ Crear cuenta</button>
+      <button type="submit" class="register-btn">
+        ✨ Crear cuenta
+      </button>
     </form>
+    {% endif %}
 
-    <!-- Botón de volver al login -->
-    <div class="register-section">
-    <p class="register-text">¿No tienes una cuenta?</p>
-    <button type="button" class="register-btn-link" onclick="window.location.href='/register'">
-        ✨ Crear cuenta nueva
-    </button>
+    <!-- Enlace para volver al login -->
+    <div class="back-to-login">
+      <a href="/login" class="back-link">
+        <span class="arrow">←</span>
+        <span class="text">Volver al inicio de sesión</span>
+      </a>
     </div>
+
+
+
+    
   </div>
 </div>
+
+<!-- Script para redirección automática -->
+{% if success %}
+<script>
+  // Redirigir al login después de 3 segundos si el registro fue exitoso
+  setTimeout(function() {
+    window.location.href = "/login";
+  }, 10000);
+</script>
+{% endif %}
 {% endblock %}

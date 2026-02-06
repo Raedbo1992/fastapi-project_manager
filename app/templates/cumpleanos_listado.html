@@ -6,158 +6,220 @@
 <link rel="stylesheet" href="{{ url_for('static', path='style_cumpleanos_listado.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
 {% endblock %}
 
 {% block content %}
-<div class="cumpleanos-header">
-  <h2><i class="bi bi-cake2"></i> Gestión de Cumpleaños</h2>
-  <a href="/cumpleanos/nuevo" class="btn-nuevo">
-    <i class="bi bi-plus-circle"></i> Nuevo Cumpleaños
-  </a>
-</div>
+<div class="page-container">
+  
+  <!-- Header (igual que ingresos) -->
+  <div class="cumpleanos-header">
+    <h2><i class="bi bi-cake2"></i> Gestión de Cumpleaños</h2>
+    <a href="/cumpleanos/nuevo" class="btn-nuevo">
+      <i class="bi bi-plus-circle"></i> Nuevo
+    </a>
+  </div>
 
-<!-- Filtros -->
-<div class="filtros-container">
-  <form method="get" action="/cumpleanos" class="filtros-form">
-    <div class="filtro-item">
-      <i class="bi bi-funnel"></i>
-      <select name="relacion" onchange="this.form.submit()">
-        <option value="">Todas las relaciones</option>
-        <option value="Familia" {% if filtro_relacion=='Familia' %}selected{% endif %}>Familia</option>
-        <option value="Amigo" {% if filtro_relacion=='Amigo' %}selected{% endif %}>Amigos</option>
-        <option value="Trabajo" {% if filtro_relacion=='Trabajo' %}selected{% endif %}>Trabajo</option>
-        <option value="Otro" {% if filtro_relacion=='Otro' %}selected{% endif %}>Otro</option>
-      </select>
-    </div>
-  </form>
-</div>
+  <!-- Filtros (igual que ingresos) -->
+  <div class="filtros-container">
+    <form method="get" action="/cumpleanos" class="filtros-form">
+      <div class="filtro-item">
+        <i class="bi bi-funnel"></i>
+        <select name="relacion" onchange="this.form.submit()" aria-label="Filtrar por relación">
+          <option value="">Todas las relaciones</option>
+          <option value="Familia" {% if filtro_relacion=='Familia' %}selected{% endif %}>Familia</option>
+          <option value="Amigo" {% if filtro_relacion=='Amigo' %}selected{% endif %}>Amigos</option>
+          <option value="Trabajo" {% if filtro_relacion=='Trabajo' %}selected{% endif %}>Trabajo</option>
+          <option value="Otro" {% if filtro_relacion=='Otro' %}selected{% endif %}>Otro</option>
+        </select>
+      </div>
+    </form>
+  </div>
 
-<div class="tabla-scroll">
-  <table class="tabla-cumpleanos">
-    <thead>
-      <tr>
-        <th>Persona</th>
-        <th>Fecha Nacimiento</th>
-        <th>Edad que cumplirá</th>
-        <th>Próximo cumpleaños</th>
-        <th>Días hasta cumpleaños</th>
-        <th>Relación</th>
-        <th>Contacto</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for cumple in cumpleanos %}
-      <tr class="{% if cumple.dias_hasta_cumpleanos <= 7 %}proximo{% endif %}">
-        <td>
-          <div class="persona-info">
-            <i class="bi bi-person-circle"></i>
-            <strong>{{ cumple.nombre_persona }}</strong>
-          </div>
-        </td>
-        <td>{{ cumple.fecha_nacimiento.strftime('%d/%m/%Y') }}</td>
-      <td>{{ cumple.edad }} años</td>
-        <td>{{ cumple.proximo_cumple.strftime('%d/%m/%Y') }}</td>
-        <td>
-          <span class="dias-badge {% if cumple.dias_hasta_cumpleanos == 0 %}hoy{% elif cumple.dias_hasta_cumpleanos <= 7 %}proximo{% endif %}">
-            {% if cumple.dias_hasta_cumpleanos == 0 %}
-              🎉 ¡HOY!
-            {% elif cumple.dias_hasta_cumpleanos == 1 %}
-              Mañana
-            {% else %}
-              En {{ cumple.dias_hasta_cumpleanos }} días
-            {% endif %}
-          </span>
-        </td>
+  <!-- Hint de scroll (igual que ingresos) -->
+  <div class="scroll-hint">
+    <i class="bi bi-arrow-left-right"></i> Desliza para ver más
+  </div>
 
-        <td>
-          {% if cumple.relacion %}
-            <span class="relacion-badge {{ cumple.relacion|lower }}">{{ cumple.relacion }}</span>
+  <!-- Tabla con wrapper (igual que ingresos) -->
+  <div class="tabla-wrapper">
+    <div class="tabla-scroll">
+      <table class="tabla-cumpleanos">
+        <thead>
+          <tr>
+            <th class="sticky-col">Nombre</th>
+            <th>F/Nac</th>
+            <th>Edad que cumplirá</th>
+            <th>Próx. Cumple</th>
+            <th>Días restantes</th>
+            <th>Relación</th>
+            <th class="sticky-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cumple in cumpleanos %}
+          <tr class="{% if cumple.dias_hasta_cumpleanos <= 7 %}proximo{% endif %}">
+            <!-- Nombre (columna sticky) -->
+            <td class="sticky-col nombre-cell">
+              {{ cumple.nombre_persona }}
+            </td>
+            
+            <!-- Fecha de nacimiento -->
+            <td class="fecha-cell">
+              {{ cumple.fecha_nacimiento.strftime('%d/%m/%Y') }}
+            </td>
+            
+            <!-- Edad -->
+            <td class="edad-cell">
+              {{ cumple.edad }} años
+            </td>
+            
+            <!-- Próximo cumpleaños -->
+            <td class="proximo-cell">
+              {{ cumple.proximo_cumple.strftime('%d/%m/%Y') }}
+            </td>
+            
+            <!-- Días restantes -->
+            <td>
+              <span class="dias-badge {% if cumple.dias_hasta_cumpleanos == 0 %}hoy{% elif cumple.dias_hasta_cumpleanos <= 7 %}proximo{% endif %}">
+                {% if cumple.dias_hasta_cumpleanos == 0 %}
+                  🎉 ¡HOY!
+                {% elif cumple.dias_hasta_cumpleanos == 1 %}
+                  Mañana
+                {% else %}
+                  En {{ cumple.dias_hasta_cumpleanos }} días
+                {% endif %}
+              </span>
+            </td>
+            
+            <!-- Relación -->
+            <td>
+              {% if cumple.relacion %}
+                <span class="relacion-badge {{ cumple.relacion|lower }}">{{ cumple.relacion }}</span>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            
+            <!-- Acciones (columna sticky) -->
+            <td class="sticky-actions">
+              <div class="acciones">
+                <a href="/cumpleanos/editar/{{ cumple.id }}" class="btn-icon edit" title="Editar">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="/cumpleanos/eliminar/{{ cumple.id }}" 
+                   class="btn-icon delete eliminar-btn" 
+                   data-id="{{ cumple.id }}"
+                   title="Eliminar">
+                  <i class="bi bi-trash-fill"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
           {% else %}
-            -
-          {% endif %}
-        </td>
-        <td>
-          <div class="contacto-info">
-            {% if cumple.telefono %}<div><i class="bi bi-phone"></i> {{ cumple.telefono }}</div>{% endif %}
-            {% if cumple.email %}<div><i class="bi bi-envelope"></i> {{ cumple.email }}</div>{% endif %}
-            {% if not cumple.telefono and not cumple.email %}-{% endif %}
-          </div>
-        </td>
-        <td class="acciones">
-          <a href="/cumpleanos/editar/{{ cumple.id }}" class="btn-icon edit">
-            <i class="bi bi-pencil"></i>
-          </a>
-          <a href="/cumpleanos/eliminar/{{ cumple.id }}" 
-             class="btn-icon delete eliminar-btn" 
-             data-id="{{ cumple.id }}">
-            <i class="bi bi-trash"></i>
-          </a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          <tr>
+            <td colspan="7" class="no-data">
+              <i class="bi bi-inbox"></i> No hay cumpleaños
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paginación (igual que ingresos) -->
+  {% if total_pages > 1 %}
+  <div class="paginacion">
+      
+      <a href="?page={% if current_page > 1 %}{{ current_page - 1 }}{% else %}1{% endif %}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
+         class="pag-btn pag-nav {% if current_page == 1 %}disabled{% endif %}">
+          <i class="bi bi-chevron-left"></i>
+      </a>
+
+      <div class="pag-info-mobile">
+        {{ current_page }} / {{ total_pages }}
+      </div>
+
+      <div class="pag-numbers">
+        <a href="?page=1{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
+           class="pag-btn {% if current_page == 1 %}active{% endif %}">1</a>
+
+        {% if current_page > 3 %}<span class="pag-dots">...</span>{% endif %}
+
+        {% for p in range([2, current_page-1]|max, [current_page+2, total_pages]|min) %}
+            <a href="?page={{ p }}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
+               class="pag-btn {% if p == current_page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if current_page < total_pages - 2 %}<span class="pag-dots">...</span>{% endif %}
+
+        {% if total_pages > 1 %}
+        <a href="?page={{ total_pages }}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
+           class="pag-btn {% if current_page == total_pages %}active{% endif %}">{{ total_pages }}</a>
+        {% endif %}
+      </div>
+
+      <a href="?page={% if current_page < total_pages %}{{ current_page + 1 }}{% else %}{{ total_pages }}{% endif %}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
+         class="pag-btn pag-nav {% if current_page == total_pages %}disabled{% endif %}">
+          <i class="bi bi-chevron-right"></i>
+      </a>
+  </div>
+  {% endif %}
+
 </div>
-
-<!-- Paginación -->
-{% if total_pages > 1 %}
-<div class="paginacion">
-    <a href="?page={% if current_page > 1 %}{{ current_page - 1 }}{% else %}1{% endif %}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
-       class="pag-btn {% if current_page == 1 %}disabled{% endif %}">
-        <i class="bi bi-chevron-left"></i>
-    </a>
-
-    <a href="?page=1{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
-       class="pag-btn {% if current_page == 1 %}active{% endif %}">1</a>
-
-    {% if current_page > 3 %}
-    <span class="pag-btn disabled">...</span>
-    {% endif %}
-
-    {% for p in range([2, current_page-1]|max, [current_page+2, total_pages]|min) %}
-        <a href="?page={{ p }}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
-           class="pag-btn {% if p == current_page %}active{% endif %}">{{ p }}</a>
-    {% endfor %}
-
-    {% if current_page < total_pages - 2 %}
-    <span class="pag-btn disabled">...</span>
-    {% endif %}
-
-    {% if total_pages > 1 %}
-    <a href="?page={{ total_pages }}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
-       class="pag-btn {% if current_page == total_pages %}active{% endif %}">{{ total_pages }}</a>
-    {% endif %}
-
-    <a href="?page={% if current_page < total_pages %}{{ current_page + 1 }}{% else %}{{ total_pages }}{% endif %}{% if filtro_relacion %}&relacion={{ filtro_relacion }}{% endif %}" 
-       class="pag-btn {% if current_page == total_pages %}disabled{% endif %}">
-        <i class="bi bi-chevron-right"></i>
-    </a>
-</div>
-{% endif %}
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  
+  // Eliminación con SweetAlert (igual que ingresos)
   document.querySelectorAll(".eliminar-btn").forEach(function(btn) {
     btn.addEventListener("click", function(e) {
       e.preventDefault();
-      const cumpleId = btn.dataset.id;
       Swal.fire({
-        title: '¿Eliminar cumpleaños?',
-        text: "Esta acción no se puede deshacer",
+        title: '¿Eliminar?',
+        text: "No se puede deshacer",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Eliminar',
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
-          window.location.href = `/cumpleanos/eliminar/${cumpleId}`;
+          window.location.href = `/cumpleanos/eliminar/${btn.dataset.id}`;
         }
       });
     });
   });
+
+  // Mensajes (igual que ingresos)
+  {% if mensaje %}
+    Swal.fire({
+      title: '{{ mensaje.titulo }}',
+      text: '{{ mensaje.texto }}',
+      icon: '{{ mensaje.tipo }}',
+      confirmButtonColor: '#3b82f6'
+    });
+  {% endif %}
+
+  // Scroll hint (igual que ingresos)
+  const scrollHint = document.querySelector('.scroll-hint');
+  const tablaScroll = document.querySelector('.tabla-scroll');
+  
+  if (tablaScroll && scrollHint) {
+    tablaScroll.addEventListener('scroll', () => {
+      scrollHint.style.opacity = '0';
+      setTimeout(() => scrollHint.remove(), 300);
+    }, { once: true });
+    
+    setTimeout(() => {
+      if (scrollHint) {
+        scrollHint.style.opacity = '0';
+        setTimeout(() => scrollHint.remove(), 300);
+      }
+    }, 4000);
+  }
 });
 </script>
 {% endblock %}

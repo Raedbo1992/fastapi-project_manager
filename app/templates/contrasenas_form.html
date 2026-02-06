@@ -6,53 +6,18 @@
 <link rel="stylesheet" href="{{ url_for('static', path='style_contrasenas_form.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <style>
-    .password-strength {
-        margin-top: 5px;
-        height: 5px;
-        background: #eee;
-        border-radius: 3px;
-        overflow: hidden;
-    }
-    
-    .password-strength-bar {
-        height: 100%;
-        width: 0%;
-        transition: width 0.3s ease, background 0.3s ease;
-    }
-    
-    .strength-weak { background: #e74c3c; width: 25%; }
-    .strength-medium { background: #f39c12; width: 50%; }
-    .strength-good { background: #3498db; width: 75%; }
-    .strength-strong { background: #2ecc71; width: 100%; }
-    
-    .strength-text {
-        font-size: 0.8rem;
-        margin-top: 3px;
-        text-align: right;
-    }
-    
-    .password-match {
-        font-size: 0.8rem;
-        margin-top: 3px;
-        text-align: right;
-    }
-    
-    .match-valid { color: #2ecc71; }
-    .match-invalid { color: #e74c3c; }
-    
     .password-field {
         position: relative;
     }
     
     .password-buttons {
         position: absolute;
-        right: 0;
-        top: 0;
-        height: 100%;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
         display: flex;
-        align-items: center;
-        gap: 5px;
-        padding-right: 10px;
+        gap: 8px;
+        z-index: 10;
     }
     
     .password-buttons button {
@@ -61,10 +26,62 @@
         cursor: pointer;
         color: #666;
         padding: 5px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
     }
     
     .password-buttons button:hover {
-        color: #3498db;
+        color: var(--primary, #2563eb);
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .password-strength {
+        margin-top: 8px;
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .strength-weak { background: #ef4444; width: 25%; }
+    .strength-medium { background: #f59e0b; width: 50%; }
+    .strength-good { background: #3b82f6; width: 75%; }
+    .strength-strong { background: #10b981; width: 100%; }
+    
+    .strength-text {
+        font-size: 0.8rem;
+        margin-top: 5px;
+        text-align: right;
+        font-weight: 500;
+    }
+    
+    .text-weak { color: #ef4444; }
+    .text-medium { color: #f59e0b; }
+    .text-good { color: #3b82f6; }
+    .text-strong { color: #10b981; }
+    
+    .password-match {
+        font-size: 0.8rem;
+        margin-top: 5px;
+        text-align: right;
+        font-weight: 500;
+    }
+    
+    .match-valid { color: #10b981; }
+    .match-invalid { color: #ef4444; }
+    
+    /* Asegurar que los inputs de contraseña tengan espacio para los botones */
+    .form-group input[type="password"],
+    .form-group input[type="text"] {
+        padding-right: 90px;
     }
 </style>
 <script>
@@ -161,15 +178,19 @@
             }
         }
         
-        strengthBar.className = 'password-strength-bar ' + className;
-        strengthText.textContent = text;
-        strengthText.className = 'strength-text ' + (text ? className.replace('strength-', 'text-') : '');
+        if (strengthBar) strengthBar.className = 'password-strength-bar ' + className;
+        if (strengthText) {
+            strengthText.textContent = text;
+            strengthText.className = 'strength-text ' + (text ? className.replace('strength-', 'text-') : '');
+        }
     }
     
     function checkPasswordMatch() {
         const password = document.getElementById('contrasena').value;
         const repeatPassword = document.getElementById('repeat_contrasena').value;
         const matchText = document.getElementById('password-match-text');
+        
+        if (!matchText) return;
         
         if (!repeatPassword) {
             matchText.textContent = '';
@@ -197,12 +218,23 @@
     
     // Inicializar eventos cuando el documento esté listo
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('contrasena').addEventListener('input', function() {
-            checkPasswordStrength();
-            checkPasswordMatch();
-        });
+        const passwordField = document.getElementById('contrasena');
+        const repeatField = document.getElementById('repeat_contrasena');
         
-        document.getElementById('repeat_contrasena').addEventListener('input', checkPasswordMatch);
+        if (passwordField) {
+            passwordField.addEventListener('input', function() {
+                checkPasswordStrength();
+                checkPasswordMatch();
+            });
+        }
+        
+        if (repeatField) {
+            repeatField.addEventListener('input', checkPasswordMatch);
+        }
+        
+        // Inicializar validación si hay valores por defecto
+        checkPasswordStrength();
+        checkPasswordMatch();
     });
 </script>
 {% endblock %}
@@ -211,7 +243,7 @@
 <div class="form-wrapper">
     <div class="form-card">
         <h2 class="form-title">
-            <i class="bi bi-{{ 'pencil' if contrasena else 'plus' }}"></i>
+            <i class="bi bi-{{ 'pencil' if contrasena else 'key' }}"></i>
             {{ "Editar Contraseña" if contrasena else "Nueva Contraseña" }}
         </h2>
         
@@ -224,14 +256,16 @@
             <div class="form-group">
                 <label for="servicio"><i class="bi bi-building"></i> Servicio</label>
                 <input type="text" name="servicio" id="servicio" 
-                       value="{{ contrasena.servicio if contrasena else '' }}" required>
+                       value="{{ contrasena.servicio if contrasena else '' }}" 
+                       placeholder="Ej: Gmail, Facebook, Banco" required>
             </div>
             
             <!-- Usuario/Email -->
             <div class="form-group">
                 <label for="usuario"><i class="bi bi-person"></i> Usuario/Email</label>
                 <input type="text" name="usuario" id="usuario" 
-                       value="{{ contrasena.usuario if contrasena else '' }}" required>
+                       value="{{ contrasena.usuario if contrasena else '' }}" 
+                       placeholder="Ej: usuario@email.com" required>
             </div>
             
             <!-- Contraseña -->
@@ -239,13 +273,13 @@
                 <label for="contrasena"><i class="bi bi-key"></i> Contraseña</label>
                 <div class="password-field">
                     <input type="password" name="contrasena" id="contrasena" 
-                           value="" required
-                           placeholder="Ingresa tu contraseña">
+                           value="{{ contrasena.contrasena if contrasena else '' }}" 
+                           placeholder="Ingresa tu contraseña" required>
                     <div class="password-buttons">
-                        <button type="button" onclick="togglePassword('contrasena', 'toggle-icon')">
+                        <button type="button" onclick="togglePassword('contrasena', 'toggle-icon')" title="Mostrar/ocultar">
                             <i id="toggle-icon" class="bi bi-eye"></i>
                         </button>
-                        <button type="button" onclick="generatePassword()">
+                        <button type="button" onclick="generatePassword()" title="Generar contraseña segura">
                             <i class="bi bi-shuffle"></i>
                         </button>
                     </div>
@@ -261,10 +295,10 @@
                 <label for="repeat_contrasena"><i class="bi bi-key-fill"></i> Repetir Contraseña</label>
                 <div class="password-field">
                     <input type="password" name="repeat_contrasena" id="repeat_contrasena" 
-                           value="" required
-                           placeholder="Repite tu contraseña">
+                           value="{{ contrasena.contrasena if contrasena else '' }}" 
+                           placeholder="Repite tu contraseña" required>
                     <div class="password-buttons">
-                        <button type="button" onclick="togglePassword('repeat_contrasena', 'repeat-toggle-icon')">
+                        <button type="button" onclick="togglePassword('repeat_contrasena', 'repeat-toggle-icon')" title="Mostrar/ocultar">
                             <i id="repeat-toggle-icon" class="bi bi-eye"></i>
                         </button>
                     </div>
@@ -277,18 +311,21 @@
                 <label for="url"><i class="bi bi-link"></i> URL</label>
                 <input type="url" name="url" id="url" 
                        value="{{ contrasena.url if contrasena else '' }}" 
-                       placeholder="https://ejemplo.com">
+                       placeholder="https://ejemplo.com/login">
             </div>
             
             <!-- Notas -->
             <div class="form-group full-width">
                 <label for="notas"><i class="bi bi-card-text"></i> Notas</label>
-                <textarea name="notas" id="notas" rows="3" placeholder="Notas adicionales sobre esta contraseña">{{ contrasena.notas if contrasena else '' }}</textarea>
+                <textarea name="notas" id="notas" rows="3" 
+                          placeholder="Notas adicionales sobre esta contraseña">{{ contrasena.notas if contrasena else '' }}</textarea>
             </div>
             
             <!-- Botones -->
             <div class="form-actions">
-
+                <a href="/contrasenas" class="btn-cancelar">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
                 <button type="submit" class="btn-guardar">
                     <i class="bi bi-save"></i> {{ "Actualizar" if contrasena else "Guardar" }}
                 </button>

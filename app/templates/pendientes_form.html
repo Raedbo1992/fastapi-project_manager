@@ -75,12 +75,18 @@
     </div>
 
 
+  <!-- Esto ya está correcto en tu código: -->
+  <!-- Botones -->
+  <div class="form-actions">
+    <a href="/pendientes" class="btn-cancelar">  <!-- Cambié de /ingresos a /pendientes -->
+      <i class="bi bi-arrow-left"></i> Cancelar
+    </a>
+    <button type="submit" class="btn-guardar">
+      <i class="bi bi-save"></i> {% if pendiente %}Actualizar{% else %}Crear{% endif %}
+    </button>
+  </div>
+      
 
-    <div class="form-row center">
-      <button type="submit" class="btn-submit">
-         <i class="bi bi-save"></i> {% if pendiente %}Actualizar{% else %}Crear{% endif %}
-      </button>
-    </div>
   </form>
 </div>
 {% endblock %}

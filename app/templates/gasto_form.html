@@ -5,7 +5,6 @@
 {% block head %}
   <link rel="stylesheet" href="{{ url_for('static', path='style_gasto_form.css') }}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  
 {% endblock %}
 
 {% block content %}
@@ -21,56 +20,85 @@
         <input type="hidden" name="id" value="{{ gasto.id }}">
       {% endif %}
 
-<form method="post" action="/gastos/guardar">
-  {% if gasto %}
-    <input type="hidden" name="id" value="{{ gasto.id }}">
-  {% endif %}
+      <!-- Categoría -->
+      <div class="form-group">
+        <label for="categoria_nombre"><i class="bi bi-tag"></i> Categoría</label>
+        <input type="text" 
+               name="categoria_nombre" 
+               id="categoria_nombre"
+               value="{{ gasto.categoria.nombre if gasto else '' }}" 
+               placeholder="Ej: Comida, Transporte" 
+               list="categorias_list"
+               required>
+        <datalist id="categorias_list">
+          {% for categoria in categorias %}
+            <option value="{{ categoria.nombre }}">
+          {% endfor %}
+        </datalist>
+        <small class="text-muted">
+          Categorías existentes: 
+          {% for cat in categorias[:3] %}
+            {{ cat.nombre }}{% if not loop.last %}, {% endif %}
+          {% endfor %}
+          {% if categorias|length > 3 %}...{% endif %}
+        </small>
+      </div>
 
-  <!-- Categoría -->
-<div class="form-group">
-  <label for="categoria_nombre"><i class="bi bi-tag"></i> Categoría</label>
-  <input list="categorias_list" name="categoria_nombre" id="categoria_nombre"
-        value="{{ gasto.categoria.nombre if gasto else '' }}" required>
-  <datalist id="categorias_list">
-    {% for categoria in categorias %}
-      <option value="{{ categoria.nombre }}"></option>
-    {% endfor %}
-  </datalist>
-</div>
-
-
-
+      <!-- Tipo de categoría -->
+      <div class="form-group">
+        <label for="tipo_categoria"><i class="bi bi-list"></i> Tipo</label>
+        <select name="tipo_categoria" id="tipo_categoria" required>
+          <option value="fijo" {% if gasto and gasto.categoria.tipo == 'fijo' %}selected{% endif %}>Fijo</option>
+          <option value="variable" {% if gasto and gasto.categoria.tipo == 'variable' %}selected{% endif %}>Variable</option>
+          <option value="opcional" {% if gasto and gasto.categoria.tipo == 'opcional' %}selected{% endif %}>Opcional</option>
+        </select>
+      </div>
 
       <!-- Valor -->
       <div class="form-group">
         <label for="valor"><i class="bi bi-currency-dollar"></i> Valor</label>
-        <input type="number" name="valor" id="valor" step="0.01" min="0" value="{{ gasto.valor if gasto else '' }}" required>
+        <input type="number" 
+               name="valor" 
+               id="valor" 
+               step="0.01" 
+               min="0" 
+               value="{{ gasto.valor if gasto else '' }}" 
+               placeholder="Ej: 50000" 
+               required>
       </div>
 
       <!-- Fecha límite -->
       <div class="form-group">
         <label for="fecha_limite"><i class="bi bi-calendar"></i> Fecha límite</label>
-        <input type="date" name="fecha_limite" id="fecha_limite" value="{{ gasto.fecha_limite if gasto and gasto.fecha_limite else '' }}">
+        <input type="date" 
+               name="fecha_limite" 
+               id="fecha_limite" 
+               value="{{ gasto.fecha_limite if gasto and gasto.fecha_limite else '' }}">
       </div>
 
       <!-- Pagado -->
       <div class="form-group checkbox-group">
-        <label for="pagado">
+        <label for="pagado" class="checkbox-label">
           <i class="bi bi-check-circle"></i> ¿Pagado?
         </label>
-        <input type="checkbox" name="pagado" id="pagado" {% if gasto and gasto.pagado %}checked{% endif %}>
+        <input type="checkbox" 
+               name="pagado" 
+               id="pagado" 
+               value="true"
+               {% if gasto and gasto.pagado %}checked{% endif %}>
       </div>
-
-
 
       <!-- Notas -->
       <div class="form-group full-width">
         <label for="notas"><i class="bi bi-card-text"></i> Notas</label>
-        <textarea name="notas" id="notas" rows="3">{{ gasto.notas if gasto else '' }}</textarea>
+        <textarea name="notas" id="notas" rows="3" placeholder="Notas adicionales...">{{ gasto.notas if gasto else '' }}</textarea>
       </div>
 
       <!-- Botones -->
-      <div class="form-actions">  
+      <div class="form-actions">
+        <a href="/gastos" class="btn-cancelar">
+          <i class="bi bi-arrow-left"></i> Cancelar
+        </a>
         <button type="submit" class="btn-guardar">
           <i class="bi bi-save"></i> {{ "Actualizar" if gasto else "Guardar" }}
         </button>
@@ -78,7 +106,6 @@
     </form>
   </div>
 </div>
-
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -92,6 +119,4 @@ document.addEventListener("DOMContentLoaded", function() {
   {% endif %}
 });
 </script>
-
-
 {% endblock %}

@@ -1,57 +1,109 @@
 {% block head %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="{{ url_for('static', path='style_login.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <div class="login-container">
   <div class="login-card">
-    <!-- Candado animado -->
-    <div class="lock-icon">
-      <svg viewBox="0 0 24 24" class="lock">
-        <path d="M12 17a2 2 0 1 0 .001-4.001A2 2 0 0 0 12 17zm6-5V9a6 6 0 0 0-12 0v3H4v10h16V12h-2zM8 9a4 4 0 1 1 8 0v3H8V9z"/>
-      </svg>
+    
+    <!-- Cabecera con icono -->
+    <div class="login-header">
+      <div class="icon-container">
+        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Bienvenido</h1>
+      <p class="login-subtitle">Accede a tu cuenta profesional</p>
     </div>
 
-    <h2 class="login-title">Accede a tu cuenta</h2>
-    <p class="login-subtitle">Ingresa tus credenciales</p>
-
+    <!-- Mensajes de error/éxito -->
     {% if error %}
-      <p class="login-error">{{ error }}</p>
+    <div class="alert alert-error">
+      <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ error }}</span>
+    </div>
     {% endif %}
 
     {% if success %}
-      <p class="login-success">{{ success }}</p>
+    <div class="alert alert-success">
+      <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+      </svg>
+      <span>{{ success }}</span>
+    </div>
     {% endif %}
 
-    <form method="post" action="/login">
-      <div class="input-group">
-        <label for="username">Usuario</label>
-        <div class="input-icon">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 12c2.67 0 8 1.34 8 4v3H4v-3c0-2.66 5.33-4 8-4zM12 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/>
+    <!-- Formulario -->
+    <form method="post" action="/login" class="login-form">
+      
+      <div class="form-group">
+        <label for="username" class="form-label">Usuario</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
           </svg>
-          <input type="text" id="username" name="username" required autofocus>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            class="form-input"
+            placeholder="Ingresa tu usuario"
+            required 
+            autofocus
+            autocomplete="username"
+          >
         </div>
       </div>
 
-      <div class="input-group">
-        <label for="password">Contraseña</label>
-        <div class="input-icon">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M12 17a2 2 0 1 0 .001-4.001A2 2 0 0 0 12 17zm6-5V9a6 6 0 0 0-12 0v3H4v10h16V12h-2zM8 9a4 4 0 1 1 8 0v3H8V9z"/>
+      <div class="form-group">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
           </svg>
-          <input type="password" id="password" name="password" required>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input"
+            placeholder="Ingresa tu contraseña"
+            required
+            autocomplete="current-password"
+          >
         </div>
       </div>
 
-      <button type="submit" class="login-btn">🔐 Iniciar sesión</button>
+      <button type="submit" class="btn btn-primary">
+        Iniciar sesión
+      </button>
     </form>
 
-    <!-- Botón de registro -->
+    <!-- Divisor -->
+    <div class="divider">
+      <span>o</span>
+    </div>
+
+    <!-- Registro -->
     <div class="register-section">
       <p class="register-text">¿No tienes una cuenta?</p>
-      <a href="/register" class="register-link">✨ Crear cuenta nueva</a>
+      <button type="button" onclick="window.location.href='/register'" class="btn btn-secondary">
+        Crear cuenta nueva
+      </button>
     </div>
+
+    <!-- Footer -->
+    <!-- <div class="login-footer">
+      <a href="#" class="footer-link">¿Olvidaste tu contraseña?</a>
+    </div> -->
+
   </div>
 </div>
 {% endblock %}

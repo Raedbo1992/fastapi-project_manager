@@ -6,37 +6,17 @@ import os
 
 load_dotenv()
 
-def get_database_url():
-    """Obtiene la URL de la base de datos para cualquier entorno"""
-    # 1. DATABASE_URL de variables de entorno
-    database_url = os.getenv("DATABASE_URL")
-    
-    if not database_url:
-        # 2. Si no hay DATABASE_URL, usar SQLite local
-        print("⚠️ DATABASE_URL no encontrada. Usando SQLite para desarrollo local.")
-        return "sqlite:///./project_manager.db"
-    
-    # 3. Corregir postgres:// a postgresql:// para SQLAlchemy
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    
-    print(f"🔗 Database URL configurada: {database_url[:50]}...")  # Mostrar solo parte por seguridad
-    return database_url
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
 
-SQLALCHEMY_DATABASE_URL = get_database_url()
+SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-# Configurar parámetros específicos para SQLite
-connect_args = {}
-if "sqlite" in SQLALCHEMY_DATABASE_URL:
-    connect_args = {"check_same_thread": False}
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args=connect_args,
-    pool_pre_ping=True if "postgresql" in SQLALCHEMY_DATABASE_URL else False
-)
-
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 Base = declarative_base()
 
 def get_db():

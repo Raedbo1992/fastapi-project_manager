@@ -89,12 +89,13 @@ class Ingreso(Base):
     fecha = Column(Date, nullable=False)
     es_salario = Column(Boolean, default=False)
     recurrente = Column(Boolean, default=False)
+    estado = Column(Enum('pendiente', 'recibido', name='estado_ingreso_enum'), nullable=False, default='pendiente')  # ✅ VERIFICAR QUE EXISTA
     notas = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relaciones
     usuario = relationship("Usuario", back_populates="ingresos")
-    categoria = relationship("Categoria", back_populates="ingresos")  # ✅ Ahora sí existe en Categoria
+    categoria = relationship("Categoria", back_populates="ingresos")
 
 # ----------------------------------------
 # 📌 Esquemas Pydantic para Ingreso

@@ -5,428 +5,475 @@
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', path='style_contrasenas_listado.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-<script>
-    // Variables globales
-    let currentTextModal = null;
-    
-    // Función para copiar texto
-    function copiarAlPortapapeles(texto, tipo, elemento) {
-        if (!texto || texto === '-' || texto === '••••••••') return;
-        
-        navigator.clipboard.writeText(texto).then(() => {
-            // Mostrar notificación
-            const toast = document.getElementById('copy-toast');
-            const toastText = document.getElementById('toast-text');
-            toastText.textContent = `${tipo} copiado al portapapeles`;
-            toast.classList.add('show');
-            
-            // Efecto en el botón
-            if (elemento) {
-                elemento.classList.add('copied');
-                setTimeout(() => elemento.classList.remove('copied'), 1000);
-            }
-            
-            setTimeout(() => toast.classList.remove('show'), 2000);
-            
-        }).catch(err => {
-            console.error('Error al copiar:', err);
-            alert('Error al copiar');
-        });
-    }
-    
-    // Mostrar/ocultar contraseña en línea
-    async function togglePassword(contrasenaId, button) {
-        const span = document.getElementById(`contrasena-${contrasenaId}`);
-        const icon = button.querySelector('i');
-        
-        if (span.textContent === '••••••••') {
-            try {
-                button.classList.add('loading');
-                
-                const response = await fetch(`/contrasenas/obtener/${contrasenaId}`);
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    span.textContent = data.contrasena;
-                    span.classList.add('visible');
-                    icon.classList.remove('bi-eye');
-                    icon.classList.add('bi-eye-slash');
-                    
-                    setTimeout(() => {
-                        if (span.textContent !== '••••••••') {
-                            span.textContent = '••••••••';
-                            span.classList.remove('visible');
-                            icon.classList.remove('bi-eye-slash');
-                            icon.classList.add('bi-eye');
-                        }
-                    }, 15000);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error de conexión');
-            } finally {
-                button.classList.remove('loading');
-            }
-        } else {
-            span.textContent = '••••••••';
-            span.classList.remove('visible');
-            icon.classList.remove('bi-eye-slash');
-            icon.classList.add('bi-eye');
-        }
-    }
-    
-    // Abrir modal para texto completo (servicio, usuario, notas, etc.)
-    function openTextModal(titulo, contenido, type = 'texto') {
-        const modal = document.getElementById('text-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalContent = document.getElementById('modal-content');
-        
-        modalTitle.textContent = titulo;
-        if (type === 'password') {
-            modalContent.innerHTML = `<div class="password-display-modal" style="font-family: 'Courier New', monospace; letter-spacing: 1.5px;">${contenido}</div>`;
-        } else {
-            modalContent.textContent = contenido;
-        }
-        
-        modal.style.display = 'flex';
-    }
-    
-    // Cerrar modal
-    function closeTextModal() {
-        document.getElementById('text-modal').style.display = 'none';
-    }
-    
-    // Copiar del modal
-    function copyFromModal() {
-        const content = document.getElementById('modal-content');
-        const text = content.textContent || content.innerText;
-        copiarAlPortapapeles(text, 'Texto', null);
-    }
-    
-    // Copiar contraseña directamente
-    async function copyPasswordDirectly(contrasenaId, button) {
-        try {
-            button.classList.add('loading');
-            
-            const response = await fetch(`/contrasenas/obtener/${contrasenaId}`);
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                copiarAlPortapapeles(data.contrasena, 'Contraseña', button);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error de conexión');
-        } finally {
-            button.classList.remove('loading');
-        }
-    }
-    
-    // Ver contraseña completa en modal
-    async function viewFullPassword(contrasenaId) {
-        try {
-            const response = await fetch(`/contrasenas/obtener/${contrasenaId}`);
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                openTextModal('Contraseña Completa', data.contrasena, 'password');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error de conexión');
-        }
-    }
-    
-    // Event listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        // Cerrar modal con Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeTextModal();
-            }
-        });
-        
-        // Cerrar modal al hacer clic fuera
-        document.getElementById('text-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeTextModal();
-            }
-        });
-        
-        // Detectar textos largos y agregar tooltips
-        const textElements = document.querySelectorAll('.servicio-text, .usuario-text, .notas-text');
-        textElements.forEach(el => {
-            if (el.scrollWidth > el.clientWidth) {
-                el.title = el.textContent;
-            }
-        });
-    });
-</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
 {% endblock %}
 
 {% block content %}
-<div class="contrasenas-header">
+<div class="page-container">
+  
+  <!-- Header -->
+  <div class="contrasenas-header">
     <h2><i class="bi bi-shield-lock"></i> Gestión de Contraseñas</h2>
     <a href="/contrasenas/nuevo" class="btn-nuevo">
-        <i class="bi bi-plus-circle"></i> Nueva Contraseña
+      <i class="bi bi-plus-circle"></i> Nueva
     </a>
-</div>
+  </div>
 
-<!-- Modal para texto completo -->
-<div id="text-modal" class="text-modal">
-    <div class="text-modal-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #2c3e50; font-size: 1.1rem;" id="modal-title"></h3>
-            <button onclick="closeTextModal()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #999; padding: 0;">
-                &times;
-            </button>
-        </div>
-        
-        <div id="modal-content" class="modal-text-display"></div>
-        
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button onclick="copyFromModal()" style="flex: 1; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">
-                <i class="bi bi-copy"></i> Copiar
-            </button>
-            <button onclick="closeTextModal()" style="flex: 1; padding: 10px; background: #f8f9fa; color: #333; border: 1px solid #dee2e6; border-radius: 5px; cursor: pointer; font-weight: 500;">
-                Cerrar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Toast de notificación -->
-<div id="copy-toast" class="copy-toast">
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <i class="bi bi-check-circle-fill"></i>
-        <span id="toast-text"></span>
-    </div>
-</div>
-
-<!-- Mensajes -->
-{% if mensaje %}
-<div class="alert alert-{% if mensaje.tipo == 'exito' %}exito{% else %}error{% endif %}">
+  <!-- Mensajes -->
+  {% if mensaje %}
+  <div class="alert alert-{{ mensaje.tipo }}">
     <strong>{{ mensaje.titulo }}</strong> {{ mensaje.texto }}
-</div>
-{% endif %}
+  </div>
+  {% endif %}
 
-<!-- Tabla Responsive -->
-<div class="tabla-responsive">
-    <table class="tabla-contrasenas">
+  <!-- Hint de scroll -->
+  <div class="scroll-hint">
+    <i class="bi bi-arrow-left-right"></i> Desliza para ver más
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-wrapper">
+    <div class="tabla-scroll">
+      <table class="tabla-contrasenas">
         <thead>
-            <tr>
-                <th>Servicio</th>
-                <th>Usuario</th>
-                <th>Contraseña</th>
-                <th>URL</th>
-                <th>Notas</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-            </tr>
+          <tr>
+            <th class="sticky-col">Servicio</th>
+            <th>Usuario</th>
+            <th>Contraseña</th>
+            <th>URL</th>
+            <th>Notas</th>
+            <th class="sticky-actions acciones-header">Acciones</th>
+          </tr>
         </thead>
         <tbody>
-            {% if contrasenas %}
-                {% for contrasena in contrasenas %}
-                <tr>
-                    <!-- Servicio -->
-                    <td>
-                        <div class="servicio-content">
-                            <i class="bi bi-shield servicio-icon"></i>
-                            <span class="servicio-text" 
-                                  onclick="openTextModal('Servicio: {{ contrasena.servicio }}', '{{ contrasena.servicio }}')"
-                                  style="cursor: pointer;">
-                                {{ contrasena.servicio }}
-                            </span>
-                            <button class="btn-copy" 
-                                    onclick="copiarAlPortapapeles('{{ contrasena.servicio }}', 'Servicio', this)"
-                                    data-tooltip="Copiar servicio">
-                                <i class="bi bi-copy"></i>
-                            </button>
-                        </div>
-                    </td>
-                    
-                    <!-- Usuario -->
-                    <td>
-                        <div class="usuario-content">
-                            <i class="bi bi-person usuario-icon"></i>
-                            <span class="usuario-text"
-                                  onclick="openTextModal('Usuario: {{ contrasena.usuario }}', '{{ contrasena.usuario }}')"
-                                  style="cursor: pointer;">
-                                {{ contrasena.usuario }}
-                            </span>
-                            <button class="btn-copy"
-                                    onclick="copiarAlPortapapeles('{{ contrasena.usuario }}', 'Usuario', this)"
-                                    data-tooltip="Copiar usuario">
-                                <i class="bi bi-copy"></i>
-                            </button>
-                        </div>
-                    </td>
-                    
-                    <!-- Contraseña -->
-                    <td>
-                        <div class="password-container">
-                            <div class="password-display">
-                                <span id="contrasena-{{ contrasena.id }}" class="password-text">
-                                    ••••••••
-                                </span>
-                            </div>
-                            <div class="password-actions">
-                                <button class="btn-password btn-show"
-                                        onclick="togglePassword({{ contrasena.id }}, this)"
-                                        data-tooltip="Mostrar/Ocultar">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="btn-password btn-modal"
-                                        onclick="viewFullPassword({{ contrasena.id }})"
-                                        data-tooltip="Ver completa">
-                                    <i class="bi bi-arrows-fullscreen"></i>
-                                </button>
-                                <button class="btn-password btn-copy-password"
-                                        onclick="copyPasswordDirectly({{ contrasena.id }}, this)"
-                                        data-tooltip="Copiar contraseña">
-                                    <i class="bi bi-copy"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </td>
-                    
-                    <!-- URL -->
-                    <td>
-                        {% if contrasena.url %}
-                        <div class="url-content">
-                            <i class="bi bi-link-45deg url-icon"></i>
-                            <div class="url-text-container">
-                                <a href="{{ contrasena.url }}" target="_blank" class="url-text"
-                                   onclick="if(event.metaKey || event.ctrlKey) return; event.preventDefault(); openTextModal('URL', '{{ contrasena.url }}');"
-                                   data-tooltip="{{ contrasena.url }}">
-                                    {{ contrasena.url|truncate(20) }}
-                                </a>
-                                <span class="url-expand" onclick="openTextModal('URL', '{{ contrasena.url }}')">
-                                    ver
-                                </span>
-                            </div>
-                            <button class="btn-copy" onclick="copiarAlPortapeles('{{ contrasena.url }}', 'URL', this)"
-                                    data-tooltip="Copiar URL">
-                                <i class="bi bi-copy"></i>
-                            </button>
-                        </div>
-                        {% else %}
-                        <span class="no-data" style="font-size: 0.85rem;">-</span>
+          {% if contrasenas %}
+            {% for contrasena in contrasenas %}
+            <tr>
+              <!-- Servicio -->
+              <td class="sticky-col">
+                <div class="servicio-content">
+                  <span class="servicio-text" 
+                        onclick="openTextModal('Servicio', '{{ contrasena.servicio }}')"
+                        title="{{ contrasena.servicio }}">
+                    {{ contrasena.servicio }}
+                  </span>
+                  <button class="btn-copy" 
+                          onclick="copiarAlPortapapeles('{{ contrasena.servicio }}', 'Servicio', this)"
+                          data-tooltip="Copiar servicio">
+                    <i class="bi bi-copy"></i>
+                  </button>
+                </div>
+              </td>
+              
+              <!-- Usuario -->
+              <td>
+                <div class="usuario-content">
+                  <i class="bi bi-person usuario-icon"></i>
+                  <span class="usuario-text"
+                        onclick="openTextModal('Usuario', '{{ contrasena.usuario }}')"
+                        title="{{ contrasena.usuario }}">
+                    {{ contrasena.usuario }}
+                  </span>
+                  <button class="btn-copy"
+                          onclick="copiarAlPortapapeles('{{ contrasena.usuario }}', 'Usuario', this)"
+                          data-tooltip="Copiar usuario">
+                    <i class="bi bi-copy"></i>
+                  </button>
+                </div>
+              </td>
+              
+              <!-- Contraseña -->
+              <td>
+                <div class="password-container">
+                  <div class="password-display">
+                    <span id="contrasena-{{ contrasena.id }}" class="password-text">
+                      ••••••••
+                    </span>
+                  </div>
+                  <div class="password-actions">
+                    <button class="btn-password btn-show"
+                            onclick="togglePassword({{ contrasena.id }}, this)"
+                            data-tooltip="Mostrar/Ocultar">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn-password btn-modal"
+                            onclick="viewFullPassword({{ contrasena.id }})"
+                            data-tooltip="Ver completa">
+                      <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                    <button class="btn-password btn-copy-password"
+                            onclick="copyPasswordDirectly({{ contrasena.id }}, this)"
+                            data-tooltip="Copiar contraseña">
+                      <i class="bi bi-copy"></i>
+                    </button>
+                  </div>
+                </div>
+              </td>
+              
+              <!-- URL -->
+              <td>
+                {% if contrasena.url %}
+                <div class="url-content">
+                  <i class="bi bi-link-45deg url-icon"></i>
+                  <div class="url-text-container">
+                    <span class="url-text"
+                          onclick="openTextModal('URL', '{{ contrasena.url }}')"
+                          title="{{ contrasena.url }}">
+                      {{ contrasena.url|truncate(20) }}
+                    </span>
+                  </div>
+                  <button class="btn-copy" 
+                          onclick="copiarAlPortapapeles('{{ contrasena.url }}', 'URL', this)"
+                          data-tooltip="Copiar URL">
+                    <i class="bi bi-copy"></i>
+                  </button>
+                </div>
+                {% else %}
+                <span class="no-url">-</span>
+                {% endif %}
+              </td>
+              
+              <!-- Notas -->
+              <td>
+                <div class="notas-content">
+                  <div class="notas-text-container">
+                    <span class="notas-text">
+                      {% if contrasena.notas %}
+                        {{ contrasena.notas[:40] }}
+                        {% if contrasena.notas|length > 40 %}
+                          <button class="btn-ver-mas" 
+                                  onclick="openTextModal('Notas', '{{ contrasena.notas }}')">
+                            ver más
+                          </button>
                         {% endif %}
-                    </td>
-                    
-                    <!-- Notas -->
-                    <td>
-                        <div class="notas-content">
-                            <i class="bi bi-chat-text notas-icon"></i>
-                            <div class="notas-text-container">
-                                <span class="notas-text" id="notas-{{ contrasena.id }}">
-                                    {% if contrasena.notas %}
-                                        {{ contrasena.notas[:40] }}
-                                        {% if contrasena.notas|length > 40 %}
-                                            <button class="btn-ver-mas" 
-                                                    onclick="openTextModal('Notas', '{{ contrasena.notas }}')">
-                                                ver más
-                                            </button>
-                                        {% endif %}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </span>
-                            </div>
-                            {% if contrasena.notas %}
-                            <button class="btn-copy" onclick="copiarAlPortapapeles('{{ contrasena.notas }}', 'Notas', this)"
-                                    data-tooltip="Copiar notas">
-                                <i class="bi bi-copy"></i>
-                            </button>
-                            {% endif %}
-                        </div>
-                    </td>
-                    
-                    <!-- Fecha -->
-                    <td>
-                        <div class="fecha-content">
-                            <i class="bi bi-calendar fecha-icon"></i>
-                            <span class="fecha-text">{{ contrasena.created_at.strftime('%d/%m/%y') }}</span>
-                        </div>
-                    </td>
-                    
-                    <!-- Acciones -->
-                    <td>
-                        <div class="acciones-content">
-                            <a href="/contrasenas/editar/{{ contrasena.id }}" class="btn-action edit" data-tooltip="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a href="/contrasenas/eliminar/{{ contrasena.id }}" class="btn-action delete" data-tooltip="Eliminar"
-                               onclick="return confirm('¿Estás seguro de eliminar esta contraseña?');">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td colspan="7" class="no-data">
-                        <i class="bi bi-inbox"></i>
-                        <div style="margin-top: 10px;">No hay contraseñas guardadas</div>
-                    </td>
-                </tr>
-            {% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </span>
+                  </div>
+                  {% if contrasena.notas %}
+                  <button class="btn-copy" 
+                          onclick="copiarAlPortapapeles('{{ contrasena.notas }}', 'Notas', this)"
+                          data-tooltip="Copiar notas">
+                    <i class="bi bi-copy"></i>
+                  </button>
+                  {% endif %}
+                </div>
+              </td>
+              
+              <!-- Acciones - ESTILO IDÉNTICO A INGRESOS -->
+              <td class="sticky-actions acciones-cell">
+                <div class="acciones">
+                  <a href="/contrasenas/editar/{{ contrasena.id }}" 
+                     class="btn-icon edit" 
+                     title="Editar">
+                    <i class="bi bi-pencil-fill"></i>
+                  </a>
+                  <a href="/contrasenas/eliminar/{{ contrasena.id }}" 
+                     class="btn-icon delete eliminar-btn" 
+                     data-id="{{ contrasena.id }}"
+                     title="Eliminar"
+                     onclick="return confirmDelete(event, {{ contrasena.id }})">
+                    <i class="bi bi-trash-fill"></i>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="no-data">
+                <i class="bi bi-inbox"></i>
+                <div>No hay contraseñas guardadas</div>
+              </td>
+            </tr>
+          {% endif %}
         </tbody>
-    </table>
-</div>
+      </table>
+    </div>
+  </div>
 
-<!-- Paginación -->
-<!-- Paginación Mejorada -->
-{% if total_pages > 1 %}
-<div class="paginacion">
-    <!-- Botón Anterior -->
+  <!-- Modal para texto completo -->
+  <div id="text-modal" class="text-modal">
+    <div class="text-modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button onclick="closeTextModal()" class="modal-close">
+          &times;
+        </button>
+      </div>
+      
+      <div id="modal-content" class="modal-text-display"></div>
+      
+      <div class="modal-actions">
+        <button onclick="copyFromModal()" class="btn-modal-copy">
+          <i class="bi bi-copy"></i> Copiar
+        </button>
+        <button onclick="closeTextModal()" class="btn-modal-close">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div id="copy-toast" class="copy-toast">
+    <div class="toast-content">
+      <i class="bi bi-check-circle-fill"></i>
+      <span id="toast-text"></span>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  {% if total_pages > 1 %}
+  <div class="paginacion">
+      
     <a href="?page={% if current_page > 1 %}{{ current_page - 1 }}{% else %}1{% endif %}" 
-       class="pag-btn {% if current_page == 1 %}disabled{% endif %}"
-       {% if current_page == 1 %}aria-disabled="true"{% endif %}>
-        <i class="bi bi-chevron-left"></i>
+       class="pag-btn pag-nav {% if current_page == 1 %}disabled{% endif %}">
+      <i class="bi bi-chevron-left"></i>
     </a>
 
-    <!-- Página 1 siempre visible -->
-    <a href="?page=1" 
-       class="pag-btn {% if current_page == 1 %}active{% endif %}">
+    <div class="pag-info-mobile">
+      {{ current_page }} / {{ total_pages }}
+    </div>
+
+    <div class="pag-numbers">
+      <a href="?page=1" 
+         class="pag-btn {% if current_page == 1 %}active{% endif %}">
         1
-    </a>
+      </a>
 
-    <!-- Puntos suspensivos si hay muchas páginas -->
-    {% if current_page > 3 %}
-    <span class="pag-btn disabled">...</span>
-    {% endif %}
+      {% if current_page > 3 %}<span class="pag-dots">...</span>{% endif %}
 
-    <!-- Páginas alrededor de la actual -->
-    {% for p in range([2, current_page-1]|max, [current_page+2, total_pages]|min) %}
+      {% for p in range([2, current_page-1]|max, [current_page+2, total_pages]|min) %}
         <a href="?page={{ p }}" 
            class="pag-btn {% if p == current_page %}active{% endif %}">
-            {{ p }}
+          {{ p }}
         </a>
-    {% endfor %}
+      {% endfor %}
 
-    <!-- Puntos suspensivos finales si es necesario -->
-    {% if current_page < total_pages - 2 %}
-    <span class="pag-btn disabled">...</span>
-    {% endif %}
+      {% if current_page < total_pages - 2 %}<span class="pag-dots">...</span>{% endif %}
 
-    <!-- Última página siempre visible -->
-    {% if total_pages > 1 %}
-    <a href="?page={{ total_pages }}" 
-       class="pag-btn {% if current_page == total_pages %}active{% endif %}">
+      {% if total_pages > 1 %}
+      <a href="?page={{ total_pages }}" 
+         class="pag-btn {% if current_page == total_pages %}active{% endif %}">
         {{ total_pages }}
-    </a>
-    {% endif %}
+      </a>
+      {% endif %}
+    </div>
 
-    <!-- Botón Siguiente -->
     <a href="?page={% if current_page < total_pages %}{{ current_page + 1 }}{% else %}{{ total_pages }}{% endif %}" 
-       class="pag-btn {% if current_page == total_pages %}disabled{% endif %}"
-       {% if current_page == total_pages %}aria-disabled="true"{% endif %}>
-        <i class="bi bi-chevron-right"></i>
+       class="pag-btn pag-nav {% if current_page == total_pages %}disabled{% endif %}">
+      <i class="bi bi-chevron-right"></i>
     </a>
-</div>
-{% endif %}
+  </div>
+  {% endif %}
 
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  
+  // Confirmar eliminación con SweetAlert (igual que ingresos)
+  document.querySelectorAll(".eliminar-btn").forEach(function(btn) {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: '¿Eliminar?',
+        text: "No se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = `/contrasenas/eliminar/${btn.dataset.id}`;
+        }
+      });
+    });
+  });
+
+  // Función para confirmar eliminación (mantener para compatibilidad)
+  window.confirmDelete = function(event, id) {
+    event.preventDefault();
+    Swal.fire({
+      title: '¿Eliminar?',
+      text: "No se puede deshacer",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = `/contrasenas/eliminar/${id}`;
+      }
+    });
+    return false;
+  };
+  
+  // Función para copiar texto
+  window.copiarAlPortapapeles = function(texto, tipo, elemento) {
+    if (!texto || texto === '-' || texto === '••••••••') return;
+    
+    navigator.clipboard.writeText(texto).then(() => {
+      const toast = document.getElementById('copy-toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = `${tipo} copiado al portapapeles`;
+      toast.classList.add('show');
+      
+      if (elemento) {
+        elemento.classList.add('copied');
+        setTimeout(() => elemento.classList.remove('copied'), 1000);
+      }
+      
+      setTimeout(() => toast.classList.remove('show'), 2000);
+      
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      alert('Error al copiar');
+    });
+  };
+  
+  // Mostrar/ocultar contraseña en línea
+  window.togglePassword = async function(contrasenaId, button) {
+    const span = document.getElementById(`contrasena-${contrasenaId}`);
+    const icon = button.querySelector('i');
+    
+    if (span.textContent === '••••••••') {
+      try {
+        button.classList.add('loading');
+        
+        const response = await fetch(`/contrasenas/obtener/${contrasenaId}`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          span.textContent = data.contrasena;
+          span.classList.add('visible');
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+          
+          setTimeout(() => {
+            if (span.textContent !== '••••••••') {
+              span.textContent = '••••••••';
+              span.classList.remove('visible');
+              icon.classList.remove('bi-eye-slash');
+              icon.classList.add('bi-eye');
+            }
+          }, 15000);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+      } finally {
+        button.classList.remove('loading');
+      }
+    } else {
+      span.textContent = '••••••••';
+      span.classList.remove('visible');
+      icon.classList.remove('bi-eye-slash');
+      icon.classList.add('bi-eye');
+    }
+  };
+  
+  // Abrir modal para texto completo
+  window.openTextModal = function(titulo, contenido, type = 'texto') {
+    const modal = document.getElementById('text-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    
+    modalTitle.textContent = titulo;
+    if (type === 'password') {
+      modalContent.innerHTML = `<div class="password-modal-display">${contenido}</div>`;
+    } else {
+      modalContent.textContent = contenido;
+    }
+    
+    modal.style.display = 'flex';
+  };
+  
+  // Cerrar modal
+  window.closeTextModal = function() {
+    document.getElementById('text-modal').style.display = 'none';
+  };
+  
+  // Copiar del modal
+  window.copyFromModal = function() {
+    const content = document.getElementById('modal-content');
+    const text = content.textContent || content.innerText;
+    copiarAlPortapapeles(text, 'Texto', null);
+  };
+  
+  // Copiar contraseña directamente
+  window.copyPasswordDirectly = async function(contrasenaId, button) {
+    try {
+      button.classList.add('loading');
+      
+      const response = await fetch(`/contrasenas/obtener/${contrasenaId}`);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        copiarAlPortapapeles(data.contrasena, 'Contraseña', button);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexión');
+    } finally {
+      button.classList.remove('loading');
+    }
+  };
+  
+  // Ver contraseña completa en modal
+  window.viewFullPassword = async function(contrasenaId) {
+    try {
+      const response = await fetch(`/contrasenas/obtener/${contrasenaId}`);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        openTextModal('Contraseña Completa', data.contrasena, 'password');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexión');
+    }
+  };
+  
+  // Event listeners para scroll hint (igual que ingresos)
+  const scrollHint = document.querySelector('.scroll-hint');
+  const tablaScroll = document.querySelector('.tabla-scroll');
+  
+  if (tablaScroll && scrollHint) {
+    tablaScroll.addEventListener('scroll', () => {
+      scrollHint.style.opacity = '0';
+      setTimeout(() => scrollHint.remove(), 300);
+    }, { once: true });
+    
+    setTimeout(() => {
+      if (scrollHint) {
+        scrollHint.style.opacity = '0';
+        setTimeout(() => scrollHint.remove(), 300);
+      }
+    }, 4000);
+  }
+  
+  // Cerrar modal con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeTextModal();
+    }
+  });
+  
+  // Cerrar modal al hacer clic fuera
+  document.getElementById('text-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTextModal();
+    }
+  });
+});
+</script>
 {% endblock %}

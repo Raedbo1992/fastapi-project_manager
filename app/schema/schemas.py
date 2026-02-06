@@ -8,11 +8,13 @@ from datetime import date
 class UsuarioBase(BaseModel):
     nombre: str
     email: EmailStr
-    username: str  # Nuevo campo
+    username: str
 
-class UsuarioCreate(UsuarioBase):
+class UsuarioCreate(BaseModel):
+    nombre: str
+    email: EmailStr
+    username: str
     password: str
-    salario: float = 0
 
 class Usuario(UsuarioBase):
     id: int
@@ -24,7 +26,7 @@ class Usuario(UsuarioBase):
 
 class CategoriaBase(BaseModel):
     nombre: str
-    tipo: str  # 'fijo', 'variable' o 'opcional'
+    tipo: str
 
 class CategoriaCreate(CategoriaBase):
     pass
@@ -61,21 +63,39 @@ class Gasto(GastoBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+# ✅ CORREGIDO - IngresoBase con estado
 class IngresoBase(BaseModel):
     valor: float
     fecha: date
+    estado: str = 'pendiente'  # ✅ AGREGADO
     notas: Optional[str] = None
 
 class IngresoCreate(IngresoBase):
     pass
 
+# ✅ CORREGIR IngresoCreate
+class IngresoCreate(BaseModel):
+    categoria_id: int
+    valor: float
+    fecha: date
+    estado: str = 'pendiente'
+    notas: Optional[str] = None
+
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ✅ CORREGIR IngresoUpdate
 class IngresoUpdate(BaseModel):
+    categoria_id: Optional[int] = None
     valor: Optional[float] = None
     fecha: Optional[date] = None
+    estado: Optional[str] = None
     notas: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
+    
 class Ingreso(IngresoBase):
     id: int
     usuario_id: int
@@ -86,9 +106,6 @@ class LoginSchema(BaseModel):
     email: EmailStr
     password: str
 
-
-
-    
 class PendienteBase(BaseModel):
     titulo: str
     descripcion: Optional[str] = None
@@ -111,9 +128,6 @@ class Pendiente(PendienteBase):
     class Config:
         orm_mode = True
 
-
- # Añade esto al inicio de tus imports
-
 class DashboardStats(BaseModel):
     salario_actual: float
     total_gastos: float
@@ -124,7 +138,7 @@ class DashboardStats(BaseModel):
     variacion_ingresos: float = 0.0
     variacion_gastos: float = 0.0
     porcentaje_ahorro: float = 0.0
-    categoria_mayor: Dict[str, Union[str, float]] = {  # Cambiado para aceptar string o float
+    categoria_mayor: Dict[str, Union[str, float]] = {
         'nombre': 'Ninguna',
         'valor': 0.0,
         'porcentaje': 0.0
@@ -139,10 +153,6 @@ class DashboardStats(BaseModel):
     porcentaje_variables: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)
-
-
-   # app/schema/contrasenas_schemas.py
-
 
 class ContrasenaBase(BaseModel):
     servicio: str
@@ -169,11 +179,6 @@ class Contrasena(ContrasenaBase):
     
     model_config = ConfigDict(from_attributes=True)
 
-
-
-
-
-# Base para Cumpleaños
 class CumpleanoBase(BaseModel):
     nombre_persona: str
     fecha_nacimiento: date
@@ -183,11 +188,9 @@ class CumpleanoBase(BaseModel):
     notas: Optional[str] = None
     notificar_dias_antes: int = 7
 
-# Para crear cumpleaños
 class CumpleanoCreate(CumpleanoBase):
     pass
 
-# Para actualizar cumpleaños
 class CumpleanoUpdate(BaseModel):
     nombre_persona: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
@@ -197,7 +200,6 @@ class CumpleanoUpdate(BaseModel):
     notas: Optional[str] = None
     notificar_dias_antes: Optional[int] = None
 
-# Para respuesta de cumpleaños
 class Cumpleano(CumpleanoBase):
     id: int
     usuario_id: int
