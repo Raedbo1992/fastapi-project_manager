@@ -1,0 +1,1423 @@
+/* =========================
+   VARIABLES
+   ========================= */
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --bg: #f8fafc;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --radius: 12px;
+  
+  /* Colores para categorías */
+  --cat-familia: #3b82f6;
+  --cat-amigos: #10b981;
+  --cat-trabajo: #f59e0b;
+  --cat-servicios: #8b5cf6;
+  --cat-educacion: #ec4899;
+  --cat-otro: #6b7280;
+}
+
+/* =========================
+   BASE
+   ========================= */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.main-content {
+  padding: 0;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.page-container {
+  max-width: 100%;
+  padding: 1rem;
+}
+
+/* =========================
+   HEADER
+   ========================= */
+.contactos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.contactos-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contactos-header h2 i {
+  color: var(--primary);
+}
+
+.btn-nuevo {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
+  padding: 0.7rem 1.3rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+.btn-nuevo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.btn-nuevo:active {
+  transform: scale(0.97);
+}
+
+/* =========================
+   FILTROS
+   ========================= */
+.filtros-container {
+  background: var(--white);
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+
+.filtros-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filtro-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filtro-item i {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.filtro-item select {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.filtro-item select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* =========================
+   SCROLL HINT
+   ========================= */
+.scroll-hint {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  animation: pulse 2s infinite;
+  transition: opacity 0.3s;
+  cursor: pointer;
+  user-select: none;
+}
+
+.scroll-hint:hover {
+  opacity: 0.9;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.scroll-hint i {
+  font-size: 1rem;
+  animation: slide 1.5s infinite;
+}
+
+@keyframes slide {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+/* =========================
+   TABLA
+   ========================= */
+.tabla-wrapper {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  position: relative;
+  width: 100%;
+}
+
+/* Scrollbar personalizada */
+.tabla-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.tabla-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.tabla-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 2px solid #f1f5f9;
+}
+
+.tabla-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.tabla-contactos {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  min-width: 900px;
+}
+
+/* =========================
+   THEAD
+   ========================= */
+.tabla-contactos thead {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tabla-contactos th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* =========================
+   TBODY
+   ========================= */
+.tabla-contactos td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.tabla-contactos tbody tr {
+  transition: background 0.15s;
+}
+
+.tabla-contactos tbody tr:hover {
+  background: #f8fafc;
+}
+
+.tabla-contactos tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================
+   COLUMNAS FIJAS
+   ========================= */
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  background: inherit !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+}
+
+.tabla-contactos thead .sticky-col {
+  z-index: 15;
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+}
+
+.sticky-actions {
+  position: sticky;
+  right: 0;
+  z-index: 5;
+  background: inherit !important;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.06);
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.tabla-contactos thead .sticky-actions {
+  z-index: 15;
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+}
+
+/* Header de acciones más pequeño */
+.acciones-header {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+/* =========================
+   ESTILOS ESPECÍFICOS DE CADA COLUMNA
+   ========================= */
+
+/* Columna CONTACTO */
+.contacto-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nombre-contacto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nombre-text {
+  flex: 1;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: 4px 0;
+}
+
+.nombre-text:hover {
+  color: var(--primary);
+}
+
+/* Columna CATEGORÍA */
+.badge-categoria {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-categoria.familia {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--cat-familia);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.badge-categoria.amigos {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--cat-amigos);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-categoria.trabajo {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--cat-trabajo);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge-categoria.servicios {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: var(--cat-servicios);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.badge-categoria.educacion {
+  background-color: rgba(236, 72, 153, 0.1);
+  color: var(--cat-educacion);
+  border: 1px solid rgba(236, 72, 153, 0.2);
+}
+
+.badge-categoria.otro {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: var(--cat-otro);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+/* Columna TELÉFONO */
+.telefono-content {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.telefono-principal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.telefono-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.telefono-info i {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.telefono-text {
+  cursor: pointer;
+  color: var(--text);
+  font-family: monospace;
+  font-size: 0.85rem;
+  padding: 4px 0;
+}
+
+.telefono-text:hover {
+  color: var(--primary);
+}
+
+.telefono-acciones {
+  display: flex;
+  gap: 4px;
+}
+
+/* Columna CORREO */
+.correo-content {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.email-contacto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.email-contacto i {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.email-text {
+  flex: 1;
+  cursor: pointer;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  padding: 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.email-text:hover {
+  text-decoration: underline;
+}
+
+/* Columna DIRECCIÓN */
+.direccion-content {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.direccion-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.direccion-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.direccion-info i {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.direccion-text {
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.direccion-text:hover {
+  color: var(--primary);
+}
+
+/* Botón copiar pequeño (IGUAL QUE CONTRASEÑAS) */
+.btn-copy-small {
+  width: 26px;
+  height: 26px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+  position: relative;
+  overflow: visible;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.1);
+  border: 1px solid #dee2e6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%230d6efd' viewBox='0 0 16 16'%3E%3Cpath d='M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z'/%3E%3Cpath d='M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px;
+}
+
+.btn-copy-small i {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.btn-copy-small:hover {
+  background-color: #0d6efd;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z'/%3E%3Cpath d='M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z'/%3E%3C/svg%3E");
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-copy-small:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-copy-small.copied {
+  background-color: #28a745 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022z'/%3E%3C/svg%3E");
+  animation: copyPulse 0.6s ease;
+}
+
+@keyframes copyPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+  50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* Botón ver teléfonos */
+.btn-ver-telefonos {
+  width: 26px;
+  height: 26px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid #dee2e6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px;
+}
+
+.btn-ver-telefonos i {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.btn-ver-telefonos:hover {
+  background-color: #e9ecef;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23212529' viewBox='0 0 16 16'%3E%3Cpath d='M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z'/%3E%3C/svg%3E");
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-ver-telefonos:active {
+  transform: translateY(0);
+}
+
+/* Sin datos */
+.sin-datos {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* =========================
+   ACCIONES
+   ========================= */
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.btn-icon.edit {
+  background: var(--primary);
+}
+
+.btn-icon.delete {
+  background: var(--danger);
+}
+
+.btn-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-icon:active {
+  transform: scale(0.9);
+}
+
+.btn-icon i {
+  font-size: 0.85rem;
+}
+
+/* Celda de acciones más compacta */
+.acciones-cell {
+  width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  text-align: center;
+}
+
+/* =========================
+   NO DATA
+   ========================= */
+.no-data {
+  text-align: center;
+  padding: 3rem !important;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+.no-data i {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.no-data-sub {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  color: var(--text-light);
+}
+
+/* =========================
+   MODALES
+   ========================= */
+.text-modal,
+.telefonos-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.text-modal-content,
+.telefonos-modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: var(--text-light);
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--danger);
+}
+
+.modal-text-display {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 15px 0;
+  border: 1px solid #e9ecef;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Modal de teléfonos */
+.telefonos-lista {
+  padding: 10px 0;
+}
+
+.telefono-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: background 0.2s;
+}
+
+.telefono-item:hover {
+  background: #e9ecef;
+}
+
+.telefono-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #0d6efd;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.telefono-icon i {
+  font-size: 1rem;
+}
+
+.telefono-info {
+  flex: 1;
+}
+
+.telefono-titulo {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.telefono-numero {
+  font-family: monospace;
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.telefono-accion {
+  margin-left: 10px;
+}
+
+.btn-copy-modal {
+  width: 36px;
+  height: 36px;
+  background: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z'/%3E%3Cpath d='M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px;
+}
+
+.btn-copy-modal i {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.btn-copy-modal:hover {
+  background-color: #0b5ed7;
+  transform: scale(1.05);
+}
+
+.btn-copy-modal:active {
+  transform: scale(0.95);
+}
+
+.sin-telefonos {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.sin-telefonos i {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.btn-modal-copy,
+.btn-modal-close {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-modal-copy {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-modal-copy:hover {
+  background: var(--primary-dark);
+}
+
+.btn-modal-close {
+  background: #e9ecef;
+  color: var(--text);
+}
+
+.btn-modal-close:hover {
+  background: #dee2e6;
+}
+
+/* Toast de notificación */
+.copy-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--success);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1100;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.copy-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-content i {
+  font-size: 1.2rem;
+}
+
+/* =========================
+   PAGINACIÓN
+   ========================= */
+.paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.pag-info-mobile {
+  display: none;
+}
+
+.pag-numbers {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.pag-btn {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0.5rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.pag-btn:hover:not(.active, .disabled) {
+  background: #f1f5f9;
+}
+
+.pag-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.pag-btn.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.pag-btn:not(.disabled):active {
+  transform: scale(0.95);
+}
+
+.pag-dots {
+  color: var(--text-light);
+  font-weight: bold;
+  padding: 0 0.25rem;
+}
+
+.pag-nav i {
+  font-size: 1rem;
+}
+
+/* =========================
+   RESPONSIVE - TABLET
+   ========================= */
+@media (max-width: 1024px) {
+  .page-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .tabla-contactos {
+    min-width: 850px;
+  }
+
+  .tabla-contactos th,
+  .tabla-contactos td {
+    padding: 0.8rem;
+  }
+  
+  /* Ajustes de acciones en tablet */
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+  }
+  
+  .btn-icon {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .btn-icon i {
+    font-size: 0.8rem;
+  }
+  
+  .btn-copy-small {
+    width: 24px;
+    height: 24px;
+    background-size: 11px;
+  }
+  
+  .btn-ver-telefonos {
+    width: 24px;
+    height: 24px;
+    background-size: 11px;
+  }
+}
+
+/* =========================
+   RESPONSIVE - MOBILE (768px)
+   ========================= */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Header móvil */
+  .contactos-header {
+    margin-bottom: 0.85rem;
+  }
+
+  .contactos-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .btn-nuevo {
+    padding: 0.65rem 1.1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Filtros móvil */
+  .filtros-container {
+    padding: 0.75rem;
+  }
+
+  .filtros-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filtro-item select {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  /* Scroll hint más visible en móvil */
+  .scroll-hint {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.65rem;
+  }
+
+  /* TABLA MÓVIL */
+  .tabla-contactos {
+    min-width: 800px;
+    font-size: 0.85rem;
+  }
+
+  .tabla-contactos th {
+    padding: 0.75rem 0.65rem;
+    font-size: 0.7rem;
+  }
+
+  .tabla-contactos td {
+    padding: 0.7rem 0.65rem;
+  }
+
+  /* QUITAR EFECTO STICKY EN MÓVIL */
+  .sticky-col,
+  .sticky-actions {
+    position: static !important;
+    box-shadow: none !important;
+    background: inherit !important;
+  }
+
+  .tabla-contactos thead .sticky-col,
+  .tabla-contactos thead .sticky-actions {
+    position: static !important;
+    background: linear-gradient(135deg, #1e293b, #334155) !important;
+  }
+
+  /* Ajustar contenido */
+  .nombre-text {
+    font-size: 0.85rem;
+  }
+
+  .email-text, .direccion-text, .telefono-text {
+    font-size: 0.8rem;
+  }
+
+  .badge-categoria {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+  
+  /* ACCIONES EN MÓVIL */
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
+  }
+  
+  .acciones-header {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.3px;
+  }
+  
+  .acciones {
+    gap: 0.3rem;
+  }
+  
+  .btn-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px;
+    min-height: 30px;
+  }
+  
+  .btn-icon i {
+    font-size: 0.7rem !important;
+  }
+
+  .btn-copy-small {
+    width: 22px;
+    height: 22px;
+    background-size: 10px;
+  }
+
+  .btn-ver-telefonos {
+    width: 22px;
+    height: 22px;
+    background-size: 10px;
+  }
+
+  /* Scrollbar más visible en móvil */
+  .tabla-scroll::-webkit-scrollbar {
+    height: 12px;
+  }
+
+  .tabla-scroll::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+  }
+
+  /* Paginación móvil */
+  .pag-numbers {
+    display: none;
+  }
+
+  .pag-info-mobile {
+    display: block;
+    background: var(--white);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text);
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .pag-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* =========================
+   RESPONSIVE - MOBILE SMALL (428px)
+   ========================= */
+@media (max-width: 428px) {
+  .page-container {
+    padding: 0.6rem 0.4rem;
+  }
+
+  .contactos-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .contactos-header h2 i {
+    font-size: 1.1rem;
+  }
+
+  .btn-nuevo {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .tabla-contactos {
+    min-width: 750px;
+  }
+
+  .tabla-contactos th {
+    padding: 0.65rem 0.5rem;
+  }
+
+  .tabla-contactos td {
+    padding: 0.65rem 0.5rem;
+  }
+
+  .scroll-hint {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .btn-copy-small {
+    width: 20px;
+    height: 20px;
+    background-size: 9px;
+  }
+
+  .btn-ver-telefonos {
+    width: 20px;
+    height: 20px;
+    background-size: 9px;
+  }
+  
+  /* ACCIONES MÁS COMPACTAS */
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 95px !important;
+    min-width: 95px !important;
+    max-width: 95px !important;
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+  }
+  
+  .acciones-header {
+    font-size: 0.65rem !important;
+  }
+  
+  .btn-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px;
+    min-height: 28px;
+  }
+  
+  .btn-icon i {
+    font-size: 0.65rem !important;
+  }
+}
+
+/* =========================
+   RESPONSIVE - MÓVIL MUY PEQUEÑO (360px)
+   ========================= */
+@media (max-width: 360px) {
+  .tabla-contactos {
+    min-width: 700px;
+  }
+  
+  .tabla-contactos th {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.6rem;
+  }
+  
+  .tabla-contactos td {
+    padding: 0.6rem 0.4rem;
+  }
+  
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+  }
+  
+  .btn-icon {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  
+  .btn-icon i {
+    font-size: 0.6rem !important;
+  }
+  
+  .btn-copy-small {
+    width: 18px;
+    height: 18px;
+    background-size: 8px;
+  }
+  
+  .btn-ver-telefonos {
+    width: 18px;
+    height: 18px;
+    background-size: 8px;
+  }
+}
+
+/* =========================
+   OPTIMIZACIONES iOS
+   ========================= */
+@supports (-webkit-touch-callout: none) {
+  .tabla-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+  
+  .tabla-scroll > .tabla-contactos {
+    scroll-snap-align: start;
+  }
+  
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* =========================
+   MEJORAS ACCESIBILIDAD
+   ========================= */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Touch targets mínimos */
+@media (hover: none) and (pointer: coarse) {
+  .btn-icon {
+    min-width: 30px !important;
+    min-height: 30px !important;
+  }
+  
+  .btn-copy-small,
+  .btn-ver-telefonos {
+    min-width: 24px !important;
+    min-height: 24px !important;
+  }
+  
+  .btn-nuevo,
+  .pag-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Asegurar que el scroll sea fácil en móviles */
+  .tabla-scroll {
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
+  }
+}
+
+/* =========================
+   AJUSTE BOTÓN NUEVO - MOBILE
+   ========================= */
+@media (max-width: 768px) {
+  .btn-nuevo {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    min-height: unset;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  }
+
+  .btn-nuevo i {
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,158 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Crédito" if credito else "Nuevo Crédito" }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', path='style_creditos_form.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+  <div class="form-card">
+    <h2 class="form-title">
+      <i class="bi bi-{{ 'pencil' if credito else 'plus' }}"></i>
+      {{ "Editar Crédito" if credito else "Nuevo Crédito" }}
+    </h2>
+
+    <form method="post" action="/creditos/guardar" id="formCredito">
+      {% if credito %}
+        <input type="hidden" name="id" value="{{ credito.id }}">
+      {% endif %}
+
+      <!-- Nombre del crédito -->
+      <div class="form-group">
+        <label for="nombre_credito"><i class="bi bi-tag"></i> Nombre del Crédito</label>
+        <input type="text" 
+               name="nombre_credito" 
+               id="nombre_credito"
+               value="{{ credito.nombre_credito if credito else '' }}" 
+               placeholder="Ej: Vehículo, Vivienda, Libre inversión" 
+               required>
+      </div>
+
+      <!-- Monto -->
+      <div class="form-group">
+        <label for="monto"><i class="bi bi-currency-dollar"></i> Monto</label>
+        <input type="number" 
+               name="monto" 
+               id="monto" 
+               step="0.01" 
+               min="0" 
+               value="{{ credito.monto if credito else '' }}" 
+               placeholder="Ej: 48000000" 
+               required>
+      </div>
+
+      <!-- Interés -->
+      <div class="form-group">
+        <label for="interes"><i class="bi bi-percent"></i> Interés Mensual (%)</label>
+        <input type="number" 
+               name="interes" 
+               id="interes" 
+               step="0.01" 
+               min="0" 
+               max="100"
+               value="{{ credito.interes if credito else '0' }}" 
+               placeholder="Ej: 1.4" 
+               required>
+        <small class="text-muted">Tasa de interés mensual (ej: 1.4% = 1.4)</small>
+      </div>
+
+      <!-- Plazo en meses -->
+      <div class="form-group">
+        <label for="plazo_meses"><i class="bi bi-calendar3"></i> Plazo (meses)</label>
+        <input type="number" 
+               name="plazo_meses" 
+               id="plazo_meses" 
+               min="1" 
+               value="{{ credito.plazo_meses if credito else '' }}" 
+               placeholder="Ej: 72" 
+               required>
+      </div>
+
+      <!-- Frecuencia de pago -->
+      <div class="form-group">
+        <label for="frecuencia_pago"><i class="bi bi-arrow-repeat"></i> Frecuencia de Pago</label>
+        <select name="frecuencia_pago" id="frecuencia_pago" required>
+          <option value="mensual" {% if credito and credito.frecuencia_pago == 'mensual' %}selected{% endif %}>Mensual</option>
+          <option value="quincenal" {% if credito and credito.frecuencia_pago == 'quincenal' %}selected{% endif %}>Quincenal</option>
+          <option value="semanal" {% if credito and credito.frecuencia_pago == 'semanal' %}selected{% endif %}>Semanal</option>
+          <option value="diario" {% if credito and credito.frecuencia_pago == 'diario' %}selected{% endif %}>Diario</option>
+        </select>
+      </div>
+
+      <!-- Fecha de inicio -->
+      <div class="form-group">
+        <label for="fecha_inicio"><i class="bi bi-calendar-event"></i> Fecha de Inicio</label>
+        <input type="date" 
+               name="fecha_inicio" 
+               id="fecha_inicio" 
+               value="{{ credito.fecha_inicio if credito and credito.fecha_inicio else '' }}"
+               required>
+      </div>
+
+      <!-- ✅ NUEVO: Seguro -->
+      <div class="form-group">
+        <label for="seguro"><i class="bi bi-shield-check"></i> Seguro Mensual</label>
+        <input type="number" 
+               name="seguro" 
+               id="seguro" 
+               step="0.01" 
+               min="0" 
+               value="{{ credito.seguro if credito else '0' }}" 
+               placeholder="Ej: 168559">
+        <small class="text-muted">Valor del seguro que se suma a la cuota mensual</small>
+      </div>
+
+
+<!-- ✅ NUEVO: Cuota Manual -->
+    <div class="form-group">
+        <label for="cuota_manual"><i class="bi bi-wrench"></i> Cuota Manual (Opcional)</label>
+        <input type="number" 
+            name="cuota_manual" 
+            id="cuota_manual" 
+            step="0.01" 
+            min="0" 
+            value="{{ credito.cuota_manual if credito and credito.cuota_manual > 0 else '' }}" 
+            placeholder="Ej: 1180000">
+        <small class="text-muted">
+            Si el banco te da una cuota específica, ingrésala aquí. Se usará en lugar del cálculo automático.
+            Déjalo en 0 para usar cálculo automático.
+        </small>
+    </div>
+
+
+      <!-- Observaciones -->
+      <div class="form-group full-width">
+        <label for="observaciones"><i class="bi bi-card-text"></i> Observaciones</label>
+        <textarea name="observaciones" id="observaciones" rows="3" placeholder="Ej: Seguro con HCI, incluye asistencia...">{{ credito.observaciones if credito else '' }}</textarea>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <a href="/creditos" class="btn-cancelar">
+          <i class="bi bi-arrow-left"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-guardar">
+          <i class="bi bi-save"></i> {{ "Actualizar" if credito else "Guardar" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  {% if mensaje %}
+    Swal.fire({
+      title: '{{ mensaje.titulo }}',
+      text: '{{ mensaje.texto }}',
+      icon: '{{ mensaje.tipo }}',
+      confirmButtonColor: '#3085d6'
+    });
+  {% endif %}
+});
+</script>
+{% endblock %}

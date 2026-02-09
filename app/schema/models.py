@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import Optional, Dict, List
-from sqlalchemy import Column, Integer, String, Text, Enum, ForeignKey, Boolean, Date, DateTime, DECIMAL, UniqueConstraint
+from sqlalchemy import Column, Float, Integer, String, Text, Enum, ForeignKey, Boolean, Date, DateTime, DECIMAL, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.config.database import Base
 from sqlalchemy.sql import func
@@ -34,9 +34,65 @@ class Usuario(Base):
     # Relaciones
     categorias = relationship("Categoria", back_populates="usuario", cascade="all, delete-orphan")
     gastos = relationship("Gasto", back_populates="usuario", cascade="all, delete-orphan")
-    ingresos = relationship("Ingreso", back_populates="usuario", cascade="all, delete-orphan")  # ✅ Relación con Ingreso
+    ingresos = relationship("Ingreso", back_populates="usuario", cascade="all, delete-orphan") 
     contrasenas = relationship("Contrasena", back_populates="usuario_rel", cascade="all, delete-orphan")
     cumpleanos = relationship("Cumpleano", back_populates="usuario", cascade="all, delete-orphan")
+    creditos = relationship("Credito", back_populates="usuario", cascade="all, delete-orphan")
+    contactos = relationship("Contacto", back_populates="usuario", cascade="all, delete-orphan")
+
+
+
+# ============================================================================
+# MODELO CRÉDITO (DEBE IR DESPUÉS DE USUARIO)
+# ============================================================================
+class Credito(Base):
+    __tablename__ = "creditos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre_credito = Column(String(200))
+    monto = Column(Float)
+    interes = Column(Float)
+    plazo_meses = Column(Integer)
+    frecuencia_pago = Column(String(20), default='mensual')
+    fecha_inicio = Column(Date)
+    
+    # ✅ DOS MODOS DE CUOTA
+    cuota_manual = Column(Float, default=0.0)      # Lo que ingresa el usuario
+    cuota = Column(Float)                          # Lo que REALMENTE se paga
+    cuota_calculada = Column(Float, nullable=True) # Lo que dice la fórmula
+    
+    seguro = Column(Float, default=0.0)
+    total_pagar = Column(Float)
+    saldo_actual = Column(Float)
+    estado = Column(String(20), default='activo')
+    observaciones = Column(Text, nullable=True)
+    usuario_id = Column(Integer, ForeignKey('usuarios.id'))
+    
+    # ✅ RELACIÓN CORREGIDA
+    usuario = relationship("Usuario", back_populates="creditos")
+    
+    # Propiedades calculadas
+    @property
+    def cuota_total(self):
+        """Cuota total a pagar (crédito + seguro)"""
+        return float(self.cuota) + float(self.seguro)
+    
+    @property
+    def modo_calculo(self):
+        """Indica el modo de cálculo actual"""
+        if self.cuota_manual and self.cuota_manual > 0:
+            return "🏦 MODO BANCO (manual)"
+        return "📐 MODO CÁLCULO (automático)"
+    
+    @property
+    def diferencia(self):
+        """Diferencia entre cuota real y calculada"""
+        if self.cuota_calculada:
+            diferencia = self.cuota - self.cuota_calculada
+            return diferencia
+        return 0.0
+
+
 # ----------------------------------------
 # 📌 Modelo Categoria
 # ----------------------------------------
@@ -195,6 +251,30 @@ class Cumpleano(Base):
     
     # Relación
     usuario = relationship("Usuario", back_populates="cumpleanos")
+
+
+# ----------------------------------------
+# 📌 Modelo Contacto
+# ----------------------------------------
+# En models.py, modifica la clase Contacto:
+class Contacto(Base):
+    __tablename__ = "contactos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombres = Column(String(100), nullable=False)
+    apellidos = Column(String(100), nullable=False)
+    categoria = Column(Enum('familia', 'amigos', 'trabajo', 'servicios', 'educacion', 'otro', name='categoria_contacto_enum'), nullable=False, default='otro')
+    direccion = Column(String(200), nullable=True)
+    celular1 = Column(String(20), nullable=False)  # Obligatorio
+    celular2 = Column(String(20), nullable=True)   # Opcional
+    email = Column(String(100), nullable=True)
+    notas = Column(Text, nullable=True)
+    usuario_id = Column(Integer, ForeignKey('usuarios.id'), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # Relación
+    usuario = relationship("Usuario", back_populates="contactos")
 # ----------------------------------------
 # 📌 Configuración explícita de mapeadores
 # ----------------------------------------

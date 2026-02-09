@@ -210,3 +210,76 @@ class Cumpleano(CumpleanoBase):
     
     class Config:
         from_attributes = True
+
+
+
+# ----------------------------------------
+# 📌 Schemas para Crédito
+# ----------------------------------------
+# En schemas.py
+class CreditoBase(BaseModel):
+    nombre_credito: str
+    monto: float
+    interes: float
+    plazo_meses: int
+    frecuencia_pago: str = "mensual"
+    fecha_inicio: date
+    seguro: float = 0.0
+    cuota_manual: float = 0.0  # ✅ Campo para modo manual
+    observaciones: Optional[str] = None
+
+class CreditoCreate(CreditoBase):
+    pass
+
+class CreditoUpdate(BaseModel):
+    nombre_credito: Optional[str] = None
+    monto: Optional[float] = None
+    interes: Optional[float] = None
+    plazo_meses: Optional[int] = None
+    frecuencia_pago: Optional[str] = None
+    fecha_inicio: Optional[date] = None
+    seguro: Optional[float] = None
+    cuota_manual: Optional[float] = None  # ✅ Se puede actualizar
+    observaciones: Optional[str] = None
+
+
+
+# ----------------------------------------
+# 📌 Schemas para CContactoss
+# ----------------------------------------
+# En schemas.py, modifica la clase ContactoBase:
+class ContactoBase(BaseModel):
+    nombres: str
+    apellidos: str
+    categoria: str = 'otro'
+    direccion: Optional[str] = None
+    celular1: str  # Obligatorio
+    celular2: Optional[str] = None  # Opcional
+    email: Optional[EmailStr] = None
+    notas: Optional[str] = None
+
+class ContactoCreate(ContactoBase):
+    pass
+
+class ContactoUpdate(BaseModel):
+    nombres: Optional[str] = None
+    apellidos: Optional[str] = None
+    categoria: Optional[str] = None
+    empresa: Optional[str] = None
+    direccion: Optional[str] = None
+    telefono1: Optional[str] = None
+    celular1: Optional[str] = None
+    telefono2: Optional[str] = None
+    celular2: Optional[str] = None
+    email: Optional[EmailStr] = None
+    notas: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class Contacto(ContactoBase):
+    id: int
+    usuario_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)

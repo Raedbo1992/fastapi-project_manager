@@ -159,11 +159,13 @@ body {
 
 .accordion-button i:first-child,
 .accordion-link i {
-  font-size: 1.1rem;
+  font-size: 1.1rem; /* íconos del botón principal y los links */
   flex-shrink: 0;
   min-width: 22px;
   text-align: center;
 }
+
+
 
 .accordion-arrow {
   font-size: 0.8rem !important;

@@ -1,0 +1,274 @@
+{% extends "base_layout.html" %}
+
+{% block title %}💳 Mis Créditos{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='style_creditos_listado.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  
+  <!-- Header -->
+  <div class="creditos-header">
+    <h2><i class="bi bi-credit-card"></i> Mis Créditos</h2>
+    <a href="/creditos/nuevo" class="btn-nuevo">
+      <i class="bi bi-plus-circle"></i> Nuevo
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-container">
+    <form method="get" action="/creditos" class="filtros-form">
+      
+      <div class="filtro-item">
+        <i class="bi bi-funnel"></i>
+        <select name="estado" onchange="this.form.submit()" aria-label="Filtrar por estado">
+          <option value="">Todos</option>
+          <option value="activo" {% if filtro_estado == 'activo' %}selected{% endif %}>Activos</option>
+          <option value="pagado" {% if filtro_estado == 'pagado' %}selected{% endif %}>Pagados</option>
+          <option value="en_mora" {% if filtro_estado == 'en_mora' %}selected{% endif %}>En Mora</option>
+        </select>
+      </div>
+
+      <div class="filtro-item">
+        <i class="bi bi-calendar-check"></i>
+        <select name="frecuencia" onchange="this.form.submit()" aria-label="Filtrar por frecuencia">
+          <option value="">Todas las frecuencias</option>
+          <option value="diario" {% if filtro_frecuencia == 'diario' %}selected{% endif %}>Diario</option>
+          <option value="semanal" {% if filtro_frecuencia == 'semanal' %}selected{% endif %}>Semanal</option>
+          <option value="quincenal" {% if filtro_frecuencia == 'quincenal' %}selected{% endif %}>Quincenal</option>
+          <option value="mensual" {% if filtro_frecuencia == 'mensual' %}selected{% endif %}>Mensual</option>
+        </select>
+      </div>
+      
+      {% if current_page and current_page > 1 %}
+        <input type="hidden" name="page" value="{{ current_page }}">
+      {% endif %}
+
+    </form>
+  </div>
+
+  <!-- Hint de scroll -->
+  <div class="scroll-hint">
+    <i class="bi bi-arrow-left-right"></i> Desliza para ver más
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-wrapper">
+    <div class="tabla-scroll">
+      <table class="tabla-creditos">
+        <thead>
+          <tr>
+            <th class="sticky-col">Crédito</th>
+            <th>Monto</th>
+            <th>Cuota Crédito</th>
+            <th>Seguro</th>
+            <th>Cuota Total</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+            <th>Frecuencia</th>
+            <th>Fecha Inicio</th>
+            <th>Plazo</th>
+            <th class="sticky-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for credito in creditos %}
+          <tr class="{% if credito.estado == 'pagado' %}pagado{% elif credito.estado == 'en_mora' %}mora{% else %}activo{% endif %}">
+            
+            <td class="sticky-col nombre-cell">
+              {{ credito.nombre_credito }}
+            </td>
+
+            <td class="valor-cell">
+              ${{ "{:,.0f}".format(credito.monto) }}
+            </td>
+
+            <!-- ✅ COLUMNA CUOTA CRÉDITO CORREGIDA -->
+            <td class="cuota-cell">
+              ${{ "{:,.0f}".format(credito.cuota) }}
+              
+              {% if credito.cuota_manual and credito.cuota_manual > 0 %}
+                  <br>
+                  <small class="text-muted" style="font-size: 0.8em;">
+                      <i class="bi bi-bank"></i> Modo banco
+                      {% if credito.diferencia != 0.0 %}
+                          <br>
+                          <span title="Diferencia con cálculo automático">
+                              (∆ ${{ "{:,.0f}".format(credito.diferencia) }})
+                          </span>
+                      {% endif %}
+                  </small>
+              {% endif %}
+            </td>
+
+            <td class="seguro-cell">
+              {% if credito.seguro > 0 %}
+                ${{ "{:,.0f}".format(credito.seguro) }}
+              {% else %}
+                <span class="no-seguro">Sin seguro</span>
+              {% endif %}
+            </td>
+
+            <!-- ✅ COLUMNA CUOTA TOTAL (CUOTA + SEGURO) -->
+            <td class="cuota-total-cell">
+              ${{ "{:,.0f}".format(credito.cuota + credito.seguro) }}
+            </td>
+
+            <td class="saldo-cell">
+              ${{ "{:,.0f}".format(credito.saldo_actual) }}
+            </td>
+
+            <td>
+              {% if credito.estado == 'pagado' %}
+                <span class="estado-badge pagado">
+                  <i class="bi bi-check-circle-fill"></i> Pagado
+                </span>
+              {% elif credito.estado == 'en_mora' %}
+                <span class="estado-badge mora">
+                  <i class="bi bi-exclamation-triangle-fill"></i> En Mora
+                </span>
+              {% else %}
+                <span class="estado-badge activo">
+                  <i class="bi bi-clock-fill"></i> Activo
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="badge-frecuencia {{ credito.frecuencia_pago }}">
+                {{ credito.frecuencia_pago }}
+              </span>
+            </td>
+
+            <td class="fecha-cell">
+              {{ credito.fecha_inicio.strftime('%d/%m/%y') if credito.fecha_inicio else '-' }}
+            </td>
+
+            <td class="plazo-cell">
+              {{ credito.plazo_meses }} meses
+            </td>
+
+            <td class="sticky-actions acciones-cell">
+              <div class="acciones">
+                <a href="/creditos/editar/{{ credito.id }}" class="btn-icon edit" title="Editar">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="/creditos/eliminar/{{ credito.id }}" 
+                   class="btn-icon delete eliminar-btn" 
+                   data-id="{{ credito.id }}"
+                   title="Eliminar">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
+            
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="11" class="no-data">
+              <i class="bi bi-inbox"></i> No hay créditos registrados
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  {% if total_pages > 1 %}
+  <div class="paginacion">
+      
+      <a href="?page={% if current_page > 1 %}{{ current_page - 1 }}{% else %}1{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_frecuencia %}&frecuencia={{ filtro_frecuencia }}{% endif %}" 
+         class="pag-btn pag-nav {% if current_page == 1 %}disabled{% endif %}">
+          <i class="bi bi-chevron-left"></i>
+      </a>
+
+      <div class="pag-info-mobile">
+        {{ current_page }} / {{ total_pages }}
+      </div>
+
+      <div class="pag-numbers">
+        <a href="?page=1{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_frecuencia %}&frecuencia={{ filtro_frecuencia }}{% endif %}" 
+           class="pag-btn {% if current_page == 1 %}active{% endif %}">1</a>
+
+        {% if current_page > 3 %}<span class="pag-dots">...</span>{% endif %}
+
+        {% for p in range([2, current_page-1]|max, [current_page+2, total_pages]|min) %}
+            <a href="?page={{ p }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_frecuencia %}&frecuencia={{ filtro_frecuencia }}{% endif %}" 
+               class="pag-btn {% if p == current_page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if current_page < total_pages - 2 %}<span class="pag-dots">...</span>{% endif %}
+
+        {% if total_pages > 1 %}
+        <a href="?page={{ total_pages }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_frecuencia %}&frecuencia={{ filtro_frecuencia }}{% endif %}" 
+           class="pag-btn {% if current_page == total_pages %}active{% endif %}">{{ total_pages }}</a>
+        {% endif %}
+      </div>
+
+      <a href="?page={% if current_page < total_pages %}{{ current_page + 1 }}{% else %}{{ total_pages }}{% endif %}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}{% if filtro_frecuencia %}&frecuencia={{ filtro_frecuencia }}{% endif %}" 
+         class="pag-btn pag-nav {% if current_page == total_pages %}disabled{% endif %}">
+          <i class="bi bi-chevron-right"></i>
+      </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  
+  document.querySelectorAll(".eliminar-btn").forEach(function(btn) {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: '¿Eliminar crédito?',
+        text: "No se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = `/creditos/eliminar/${btn.dataset.id}`;
+        }
+      });
+    });
+  });
+
+  {% if mensaje %}
+    Swal.fire({
+      title: '{{ mensaje.titulo }}',
+      text: '{{ mensaje.texto }}',
+      icon: '{{ mensaje.tipo }}',
+      confirmButtonColor: '#3b82f6'
+    });
+  {% endif %}
+
+  const scrollHint = document.querySelector('.scroll-hint');
+  const tablaScroll = document.querySelector('.tabla-scroll');
+  
+  if (tablaScroll && scrollHint) {
+    tablaScroll.addEventListener('scroll', () => {
+      scrollHint.style.opacity = '0';
+      setTimeout(() => scrollHint.remove(), 300);
+    }, { once: true });
+    
+    setTimeout(() => {
+      if (scrollHint) {
+        scrollHint.style.opacity = '0';
+        setTimeout(() => scrollHint.remove(), 300);
+      }
+    }, 4000);
+  }
+});
+</script>
+{% endblock %}

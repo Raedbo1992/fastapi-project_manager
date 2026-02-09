@@ -8,7 +8,11 @@
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+  <!-- Última versión estable de Bootstrap Icons desde jsDelivr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+
+
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
@@ -82,6 +86,22 @@
           </div>
         </div>
 
+
+        <!-- Créditos -->
+        <div class="accordion-item">
+          <button class="accordion-button" data-title="Créditos">
+            <i class="bi bi-credit-card"></i>
+            <span class="sidebar-text">Créditos</span>
+            <i class="bi bi-chevron-right accordion-arrow"></i>
+          </button>
+          <div class="accordion-content">
+            <a href="/creditos" data-title="Ver Créditos">
+              <i class="bi bi-list-ul"></i>
+              <span class="sidebar-text">Ver Créditos</span>
+            </a>
+          </div>
+        </div>
+
         <!-- Notas pendientes -->
         <div class="accordion-item">
           <a href="/pendientes" class="accordion-link" data-title="Notas pendientes">
@@ -89,6 +109,22 @@
             <span class="sidebar-text">Notas pendientes</span>
           </a>
         </div>
+
+        <!-- CONTACTOS - NUEVO ITEM -->
+        <div class="accordion-item">
+          <button class="accordion-button" data-title="Contactos">
+            <i class="bi bi-person-lines-fill"></i>
+            <span class="sidebar-text">Contactos</span>
+            <i class="bi bi-chevron-right accordion-arrow"></i>
+          </button>
+          <div class="accordion-content">
+            <a href="/contactos" data-title="Ver Contactos">
+              <i class="bi bi-list-ul"></i>
+              <span class="sidebar-text">Ver Contactos</span>
+            </a>
+          </div>
+      </div>
+
 
         <!-- Contraseñas -->
         <div class="accordion-item">
@@ -105,20 +141,24 @@
           </div>
         </div>
 
-        <!-- Cumpleaños -->
-        <div class="accordion-item">
-          <button class="accordion-button" data-title="Cumpleaños">
-            <i class="bi bi-cake2"></i>
-            <span class="sidebar-text">Cumpleaños</span>
-            <i class="bi bi-chevron-right accordion-arrow"></i>
-          </button>
-          <div class="accordion-content">
-            <a href="/cumpleanos" data-title="Ver Cumpleaños">
-              <i class="bi bi-calendar-heart"></i>
-              <span class="sidebar-text">Ver Cumpleaños</span>
-            </a>
-          </div>
-        </div>
+<!-- Cumpleaños -->
+<div class="accordion-item">
+  <button class="accordion-button" data-title="Cumpleaños">
+    <i class="bi bi-cake"></i> <!-- <-- ícono corregido -->
+    <span class="sidebar-text">Cumpleaños</span>
+    <i class="bi bi-chevron-right accordion-arrow"></i>
+  </button>
+  <div class="accordion-content">
+    <a href="/cumpleanos" data-title="Ver Cumpleaños">
+      <i class="bi bi-cake"></i> <!-- <-- ícono corregido -->
+      <span class="sidebar-text">Ver Cumpleaños</span>
+    </a>
+  </div>
+</div>
+
+
+
+
 
         <!-- Separador -->
         <div class="sidebar-divider"></div>

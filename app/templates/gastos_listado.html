@@ -48,6 +48,14 @@
       {% endif %}
 
     </form>
+
+     <!-- Botón descargar Excel -->
+  <a href="/gastos/descargar-excel?tipo={{ filtro_tipo or '' }}&estado={{ filtro_estado or '' }}"
+     class="btn-excel"
+     title="Descargar Excel">
+    <i class="bi bi-file-earmark-excel"></i> Descargar
+  </a>
+  
   </div>
 
   <!-- Hint de scroll -->

@@ -21,34 +21,44 @@
   </div>
 
   <!-- Filtros -->
-  <div class="filtros-container">
-    <form method="get" action="/ingresos" class="filtros-form">
-      
-      <div class="filtro-item">
-        <i class="bi bi-funnel"></i>
-        <select name="tipo" onchange="this.form.submit()" aria-label="Filtrar por tipo">
-          <option value="">Todos</option>
-          <option value="fijo" {% if filtro_tipo == 'fijo' %}selected{% endif %}>Fijos</option>
-          <option value="variable" {% if filtro_tipo == 'variable' %}selected{% endif %}>Variables</option>
-          <option value="opcional" {% if filtro_tipo == 'opcional' %}selected{% endif %}>Opcionales</option>
-        </select>
-      </div>
+<div class="filtros-container">
+  <form method="get" action="/ingresos" class="filtros-form">
+    
+    <div class="filtro-item">
+      <i class="bi bi-funnel"></i>
+      <select name="tipo" onchange="this.form.submit()" aria-label="Filtrar por tipo">
+        <option value="">Todos</option>
+        <option value="fijo" {% if filtro_tipo == 'fijo' %}selected{% endif %}>Fijos</option>
+        <option value="variable" {% if filtro_tipo == 'variable' %}selected{% endif %}>Variables</option>
+        <option value="opcional" {% if filtro_tipo == 'opcional' %}selected{% endif %}>Opcionales</option>
+      </select>
+    </div>
 
-      <div class="filtro-item">
-        <i class="bi bi-check2-circle"></i>
-        <select name="estado" onchange="this.form.submit()" aria-label="Filtrar por estado">
-          <option value="">Todos</option>
-          <option value="recibido" {% if filtro_estado == 'recibido' %}selected{% endif %}>Recibidos</option>
-          <option value="pendiente" {% if filtro_estado == 'pendiente' %}selected{% endif %}>Pendientes</option>
-        </select>
-      </div>
-      
-      {% if current_page and current_page > 1 %}
-        <input type="hidden" name="page" value="{{ current_page }}">
-      {% endif %}
+    <div class="filtro-item">
+      <i class="bi bi-check2-circle"></i>
+      <select name="estado" onchange="this.form.submit()" aria-label="Filtrar por estado">
+        <option value="">Todos</option>
+        <option value="recibido" {% if filtro_estado == 'recibido' %}selected{% endif %}>Recibidos</option>
+        <option value="pendiente" {% if filtro_estado == 'pendiente' %}selected{% endif %}>Pendientes</option>
+      </select>
+    </div>
+    
+    {% if current_page and current_page > 1 %}
+      <input type="hidden" name="page" value="{{ current_page }}">
+    {% endif %}
 
-    </form>
-  </div>
+  </form>
+
+  <!-- Botón de descarga Excel - AHORA A LA IZQUIERDA -->
+  <a href="/ingresos/descargar-excel?tipo={{ filtro_tipo or '' }}&estado={{ filtro_estado or '' }}" 
+     class="btn-excel" 
+     title="Descargar Excel">
+    <i class="bi bi-file-earmark-excel"></i> Descargar
+  </a>
+</div>
+
+
+
 
   <!-- Hint de scroll -->
   <div class="scroll-hint">

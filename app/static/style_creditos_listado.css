@@ -7,6 +7,7 @@
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
+  --mora: #dc2626;
   --bg: #f8fafc;
   --white: #ffffff;
   --border: #e2e8f0;
@@ -39,7 +40,7 @@
 /* =========================
    HEADER
    ========================= */
-.ingresos-header {
+.creditos-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -47,7 +48,7 @@
   gap: 1rem;
 }
 
-.ingresos-header h2 {
+.creditos-header h2 {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);
@@ -57,7 +58,7 @@
   gap: 0.5rem;
 }
 
-.ingresos-header h2 i {
+.creditos-header h2 i {
   color: var(--primary);
 }
 
@@ -84,7 +85,7 @@
 }
 
 /* =========================
-   FILTROS Y BOTÓN EXCEL
+   FILTROS
    ========================= */
 .filtros-container {
   background: var(--white);
@@ -92,85 +93,45 @@
   border-radius: var(--radius);
   margin-bottom: 1rem;
   box-shadow: var(--shadow-sm);
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: nowrap;
 }
 
 .filtros-form {
   display: flex;
   gap: 0.5rem;
-  flex: 0 0 auto;
 }
 
 .filtro-item {
-  flex: 0 0 150px;
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   background: #f8fafc;
-  padding: 0.6rem 0.8rem;
+  padding: 0.6rem 1rem;
   border-radius: 8px;
 }
 
 .filtro-item i {
   color: var(--text-light);
   flex-shrink: 0;
-  font-size: 0.9rem;
 }
 
 .filtro-item select {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--text);
   font-weight: 500;
   outline: none;
   cursor: pointer;
   min-height: 24px;
-  min-width: 0;
-}
-
-.btn-excel {
-  background: linear-gradient(135deg, #1d6f42, #217346);
-  color: white;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: none;
-  box-shadow: 0 2px 8px rgba(33, 115, 70, 0.3);
-  transition: all 0.2s;
-  white-space: nowrap;
-  min-height: 40px;
-  flex: 0 0 auto;
-}
-
-.btn-excel:hover {
-  background: linear-gradient(135deg, #176239, #1a5c38);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(33, 115, 70, 0.4);
-}
-
-.btn-excel:active {
-  transform: scale(0.97);
-}
-
-.btn-excel i {
-  font-size: 1.1rem;
 }
 
 /* =========================
    SCROLL HINT
    ========================= */
 .scroll-hint {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #2563eb, #1e40af);
   color: white;
   padding: 0.6rem 1rem;
   border-radius: 8px;
@@ -247,15 +208,18 @@
   background: #94a3b8;
 }
 
-.tabla-ingresos {
+.tabla-creditos {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.9rem;
-  min-width: 900px;
+  min-width: 1000px;
 }
 
-.tabla-ingresos thead {
+/* =========================
+   THEAD
+   ========================= */
+.tabla-creditos thead {
   background: linear-gradient(135deg, #1e293b, #334155);
   color: white;
   position: sticky;
@@ -263,7 +227,7 @@
   z-index: 10;
 }
 
-.tabla-ingresos th {
+.tabla-creditos th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
@@ -273,30 +237,37 @@
   white-space: nowrap;
 }
 
-.tabla-ingresos td {
+/* =========================
+   TBODY
+   ========================= */
+.tabla-creditos td {
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
-.tabla-ingresos tbody tr {
+.tabla-creditos tbody tr {
   transition: background 0.15s;
 }
 
-.tabla-ingresos tbody tr:hover {
+.tabla-creditos tbody tr:hover {
   background: #f8fafc;
 }
 
-.tabla-ingresos tbody tr:last-child td {
+.tabla-creditos tbody tr:last-child td {
   border-bottom: none;
 }
 
-.tabla-ingresos tbody tr.recibido {
+.tabla-creditos tbody tr.pagado {
   background: linear-gradient(to right, #f0fdf4 0%, #ffffff 8%);
 }
 
-.tabla-ingresos tbody tr.pendiente {
-  background: linear-gradient(to right, #fffbeb 0%, #ffffff 8%);
+.tabla-creditos tbody tr.activo {
+  background: linear-gradient(to right, #dbeafe 0%, #ffffff 8%);
+}
+
+.tabla-creditos tbody tr.mora {
+  background: linear-gradient(to right, #fef2f2 0%, #ffffff 8%);
 }
 
 /* =========================
@@ -308,9 +279,12 @@
   z-index: 5;
   background: inherit !important;
   box-shadow: 2px 0 8px rgba(0,0,0,0.06);
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
 }
 
-.tabla-ingresos thead .sticky-col {
+.tabla-creditos thead .sticky-col {
   z-index: 15;
   background: linear-gradient(135deg, #1e293b, #334155) !important;
 }
@@ -326,54 +300,68 @@
   max-width: 120px;
 }
 
-.tabla-ingresos thead .sticky-actions {
+.tabla-creditos thead .sticky-actions {
   z-index: 15;
   background: linear-gradient(135deg, #1e293b, #334155) !important;
-}
-
-.acciones-header {
-  width: 120px !important;
-  min-width: 120px !important;
-  max-width: 120px !important;
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
 }
 
 /* =========================
    CELDAS ESPECÍFICAS
    ========================= */
-.categoria-cell {
+.nombre-cell {
   font-weight: 600;
   color: var(--text);
-  max-width: 180px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.valor-cell {
+.valor-cell,
+.cuota-cell,
+.saldo-cell {
   font-weight: 700;
   color: var(--text);
   font-size: 1rem;
   white-space: nowrap;
 }
 
-.fecha-cell {
+.saldo-cell {
+  color: var(--primary);
+}
+
+.fecha-cell,
+.plazo-cell {
   color: var(--text-light);
   font-size: 0.85rem;
   white-space: nowrap;
 }
 
-.notas-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+/* Agregar después de .cuota-cell */
+.seguro-cell,
+.cuota-total-cell {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 1rem;
   white-space: nowrap;
+}
+
+.cuota-total-cell {
+  color: var(--success);
+  font-weight: 800;
+}
+
+.no-seguro {
   color: var(--text-light);
   font-size: 0.85rem;
+  font-style: italic;
 }
 
 /* =========================
    BADGES
    ========================= */
-.badge-tipo {
+.badge-frecuencia {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 12px;
@@ -384,19 +372,24 @@
   white-space: nowrap;
 }
 
-.badge-tipo.fijo {
+.badge-frecuencia.mensual {
   background: #dbeafe;
   color: #1e40af;
 }
 
-.badge-tipo.variable {
+.badge-frecuencia.quincenal {
   background: #fef3c7;
   color: #92400e;
 }
 
-.badge-tipo.opcional {
+.badge-frecuencia.semanal {
   background: #e0e7ff;
   color: #3730a3;
+}
+
+.badge-frecuencia.diario {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .estado-badge {
@@ -410,31 +403,33 @@
   white-space: nowrap;
 }
 
-.estado-badge.recibido {
+.estado-badge.pagado {
   background: #d1fae5;
   color: #065f46;
 }
 
-.estado-badge.pendiente {
-  background: #fed7aa;
-  color: #92400e;
+.estado-badge.activo {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.estado-badge.mora {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 /* =========================
-   ACCIONES COMPACTAS
+   ACCIONES
    ========================= */
-.acciones-compactas {
+.acciones {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   justify-content: center;
-  align-items: center;
-  padding: 0;
 }
 
-.btn-icon-edit,
-.btn-icon-delete {
-  width: 32px !important;
-  height: 32px !important;
+.btn-icon {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -443,35 +438,22 @@
   text-decoration: none;
   transition: all 0.2s;
   cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
 }
 
-.btn-icon-edit {
+.btn-icon.edit {
   background: var(--primary);
 }
 
-.btn-icon-delete {
+.btn-icon.delete {
   background: var(--danger);
 }
 
-.btn-icon-edit:active,
-.btn-icon-delete:active {
+.btn-icon:active {
   transform: scale(0.9);
 }
 
-.btn-icon-edit i,
-.btn-icon-delete i {
-  font-size: 0.75rem !important;
-}
-
-.acciones-cell {
-  width: 120px !important;
-  min-width: 120px !important;
-  max-width: 120px !important;
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
-  text-align: center;
+.btn-icon i {
+  font-size: 0.85rem;
 }
 
 /* =========================
@@ -562,67 +544,45 @@
     padding: 1rem 0.75rem;
   }
 
-  .filtros-container {
-    padding: 0.65rem;
-    gap: 0.4rem;
+  .tabla-creditos {
+    min-width: 900px;
   }
 
-  .filtro-item {
-    flex: 0 0 140px;
-    padding: 0.55rem 0.7rem;
-  }
-
-  .filtro-item select {
-    font-size: 0.8rem;
-  }
-
-  .btn-excel {
-    padding: 0.55rem 0.9rem;
-    font-size: 0.8rem;
-  }
-
-  .tabla-ingresos {
-    min-width: 850px;
-  }
-
-  .tabla-ingresos th,
-  .tabla-ingresos td {
+  .tabla-creditos th,
+  .tabla-creditos td {
     padding: 0.8rem;
   }
   
   .sticky-actions,
-  .acciones-header,
   .acciones-cell {
     width: 110px !important;
     min-width: 110px !important;
     max-width: 110px !important;
   }
   
-  .btn-icon-edit,
-  .btn-icon-delete {
-    width: 30px !important;
-    height: 30px !important;
+  .btn-icon {
+    width: 34px;
+    height: 34px;
   }
   
-  .btn-icon-edit i,
-  .btn-icon-delete i {
-    font-size: 0.7rem !important;
+  .btn-icon i {
+    font-size: 0.8rem;
   }
 }
 
 /* =========================
-   RESPONSIVE - MOBILE (768px)
+   RESPONSIVE - MOBILE
    ========================= */
 @media (max-width: 768px) {
   .page-container {
     padding: 0.75rem 0.5rem;
   }
 
-  .ingresos-header {
+  .creditos-header {
     margin-bottom: 0.85rem;
   }
 
-  .ingresos-header h2 {
+  .creditos-header h2 {
     font-size: 1.3rem;
   }
 
@@ -638,59 +598,36 @@
     font-size: 0.85rem;
   }
 
-  /* Filtros móvil */
   .filtros-container {
     padding: 0.65rem;
     margin-bottom: 0.85rem;
-    flex-wrap: wrap;
-  }
-
-  .filtros-form {
-    flex: 1 1 100%;
-    min-width: 100%;
   }
 
   .filtro-item {
-    padding: 0.55rem 0.7rem;
-    flex: 1 1 auto;
-    min-width: 0;
+    padding: 0.55rem 0.85rem;
   }
 
   .filtro-item select {
-    font-size: 0.8rem;
-  }
-
-  .btn-excel {
-    flex: 1 1 100%;
-    justify-content: center;
-    padding: 0.6rem 1rem;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-  }
-
-  .btn-excel i {
-    font-size: 1rem;
+    font-size: 0.85rem;
   }
 
   .scroll-hint {
     padding: 0.6rem 1rem;
     font-size: 0.8rem;
     margin-bottom: 0.65rem;
-    background: linear-gradient(135deg, #2563eb, #1e40af);
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
   }
 
-  .tabla-ingresos {
-    min-width: 700px;
+  .tabla-creditos {
+    min-width: 800px;
     font-size: 0.85rem;
   }
 
-  .tabla-ingresos th {
+  .tabla-creditos th {
     padding: 0.75rem 0.65rem;
     font-size: 0.7rem;
   }
 
-  .tabla-ingresos td {
+  .tabla-creditos td {
     padding: 0.7rem 0.65rem;
   }
 
@@ -699,29 +636,29 @@
     position: static !important;
     box-shadow: none !important;
     background: inherit !important;
+    width: auto !important;
+    min-width: auto !important;
+    max-width: auto !important;
   }
 
-  .tabla-ingresos thead .sticky-col,
-  .tabla-ingresos thead .sticky-actions {
+  .tabla-creditos thead .sticky-col,
+  .tabla-creditos thead .sticky-actions {
     position: static !important;
     background: linear-gradient(135deg, #1e293b, #334155) !important;
   }
 
-  .categoria-cell {
+  .nombre-cell {
     max-width: 140px;
     font-size: 0.85rem;
   }
 
-  .valor-cell {
+  .valor-cell,
+  .cuota-cell,
+  .saldo-cell {
     font-size: 0.9rem;
   }
 
-  .notas-cell {
-    max-width: 150px;
-    font-size: 0.8rem;
-  }
-
-  .badge-tipo {
+  .badge-frecuencia {
     font-size: 0.65rem;
     padding: 3px 8px;
   }
@@ -732,7 +669,6 @@
   }
   
   .sticky-actions,
-  .acciones-header,
   .acciones-cell {
     width: 100px !important;
     min-width: 100px !important;
@@ -741,25 +677,18 @@
     padding-right: 0.4rem !important;
   }
   
-  .acciones-header {
-    font-size: 0.7rem !important;
-    letter-spacing: 0.3px;
-  }
-  
-  .acciones-compactas {
+  .acciones {
     gap: 0.3rem;
   }
   
-  .btn-icon-edit,
-  .btn-icon-delete {
+  .btn-icon {
     width: 30px !important;
     height: 30px !important;
     min-width: 30px;
     min-height: 30px;
   }
   
-  .btn-icon-edit i,
-  .btn-icon-delete i {
+  .btn-icon i {
     font-size: 0.7rem !important;
   }
 
@@ -794,36 +723,27 @@
 }
 
 /* =========================
-   RESPONSIVE - MOBILE SMALL (428px)
+   RESPONSIVE - MOBILE SMALL
    ========================= */
 @media (max-width: 428px) {
   .page-container {
     padding: 0.6rem 0.4rem;
   }
 
-  .ingresos-header h2 {
+  .creditos-header h2 {
     font-size: 1.2rem;
   }
 
-  .ingresos-header h2 i {
-    font-size: 1.1rem;
+  .tabla-creditos {
+    min-width: 750px;
   }
 
-  .btn-nuevo {
-    padding: 0.6rem 1rem;
-    font-size: 0.8rem;
-  }
-
-  .tabla-ingresos {
-    min-width: 650px;
-  }
-
-  .tabla-ingresos th {
+  .tabla-creditos th {
     padding: 0.65rem 0.5rem;
     font-size: 0.65rem;
   }
 
-  .tabla-ingresos td {
+  .tabla-creditos td {
     padding: 0.65rem 0.5rem;
   }
 
@@ -833,7 +753,6 @@
   }
   
   .sticky-actions,
-  .acciones-header,
   .acciones-cell {
     width: 95px !important;
     min-width: 95px !important;
@@ -842,76 +761,26 @@
     padding-right: 0.3rem !important;
   }
   
-  .acciones-header {
-    font-size: 0.65rem !important;
-  }
-  
-  .btn-icon-edit,
-  .btn-icon-delete {
+  .btn-icon {
     width: 28px !important;
     height: 28px !important;
     min-width: 28px;
     min-height: 28px;
   }
   
-  .btn-icon-edit i,
-  .btn-icon-delete i {
+  .btn-icon i {
     font-size: 0.65rem !important;
   }
   
-  .categoria-cell {
+  .nombre-cell {
     max-width: 120px;
     font-size: 0.8rem;
   }
   
-  .notas-cell {
-    max-width: 130px;
-    font-size: 0.75rem;
-  }
-  
-  .valor-cell {
+  .valor-cell,
+  .cuota-cell,
+  .saldo-cell {
     font-size: 0.85rem;
-  }
-  
-  .fecha-cell {
-    font-size: 0.75rem;
-  }
-}
-
-/* =========================
-   RESPONSIVE - MÓVIL MUY PEQUEÑO (360px)
-   ========================= */
-@media (max-width: 360px) {
-  .tabla-ingresos {
-    min-width: 600px;
-  }
-  
-  .tabla-ingresos th {
-    padding: 0.6rem 0.4rem;
-    font-size: 0.6rem;
-  }
-  
-  .tabla-ingresos td {
-    padding: 0.6rem 0.4rem;
-  }
-  
-  .sticky-actions,
-  .acciones-header,
-  .acciones-cell {
-    width: 90px !important;
-    min-width: 90px !important;
-    max-width: 90px !important;
-  }
-  
-  .btn-icon-edit,
-  .btn-icon-delete {
-    width: 26px !important;
-    height: 26px !important;
-  }
-  
-  .btn-icon-edit i,
-  .btn-icon-delete i {
-    font-size: 0.6rem !important;
   }
 }
 
@@ -924,7 +793,7 @@
     scroll-snap-type: x mandatory;
   }
   
-  .tabla-scroll > .tabla-ingresos {
+  .tabla-scroll > .tabla-creditos {
     scroll-snap-align: start;
   }
   
@@ -944,8 +813,7 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .btn-icon-edit,
-  .btn-icon-delete {
+  .btn-icon {
     min-width: 30px !important;
     min-height: 30px !important;
   }

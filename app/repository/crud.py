@@ -4,7 +4,7 @@ import os
 from datetime import date, datetime, timedelta
 from typing import Optional, Dict
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, extract
+from sqlalchemy import func, and_, extract, or_
 from cryptography.fernet import Fernet
 from passlib.context import CryptContext
 
@@ -829,3 +829,442 @@ def calcular_proximo_cumple(fecha_nacimiento: date) -> date:
         proximo = date(hoy.year + 1, fecha_nacimiento.month, fecha_nacimiento.day)
 
     return proximo
+
+
+
+# ============================================================================
+# 💳 FUNCIONES DE CRÉDITOS
+# ============================================================================
+
+def calcular_cuota_credito(monto: float, interes_mensual: float, plazo_meses: int, 
+                          frecuencia: str = 'mensual') -> float:
+    """
+    Calcula la cuota de un crédito usando fórmula de amortización francesa
+    
+    Args:
+        monto: Monto del crédito
+        interes_mensual: Tasa de interés MENSUAL en porcentaje (ej: 1.4 para 1.4%)
+        plazo_meses: Plazo en meses
+        frecuencia: Frecuencia de pago ('mensual' principalmente)
+    
+    Returns:
+        Cuota calculada (solo del crédito, sin seguro)
+    
+    Ejemplo:
+        Crédito: $48,000,000
+        Interés: 1.4% mensual
+        Plazo: 72 meses
+        Cuota esperada: $1,180,000
+    """
+    if interes_mensual == 0:
+        # Sin interés, dividir el monto entre el plazo
+        return round(monto / plazo_meses, 2)
+    
+    # Convertir interés de porcentaje a decimal
+    i = interes_mensual / 100
+    
+    # Número de cuotas según frecuencia
+    if frecuencia == 'quincenal':
+        i = i / 2  # Interés quincenal
+        n = plazo_meses * 2
+    elif frecuencia == 'semanal':
+        i = i / 4  # Interés semanal
+        n = plazo_meses * 4
+    elif frecuencia == 'diario':
+        i = i / 30  # Interés diario
+        n = plazo_meses * 30
+    else:  # mensual (por defecto)
+        n = plazo_meses
+    
+    # Fórmula de amortización francesa: 
+    # Cuota = P * [i * (1 + i)^n] / [(1 + i)^n - 1]
+    try:
+        numerador = i * pow(1 + i, n)
+        denominador = pow(1 + i, n) - 1
+        cuota = monto * (numerador / denominador)
+        
+        # Redondear a 2 decimales
+        return round(cuota, 2)
+    except Exception as e:
+        print(f"Error en cálculo de cuota: {e}")
+        return 0.0
+
+def crear_credito(db: Session, credito: schemas.CreditoCreate, usuario_id: int):
+    """Crea un nuevo crédito para un usuario"""
+    try:
+        # ✅ DECISIÓN: ¿Usar cuota manual o calcular?
+        if credito.cuota_manual and credito.cuota_manual > 0:
+            # Usar la cuota manual proporcionada por el usuario
+            cuota = credito.cuota_manual
+            print(f"📌 USANDO CUOTA MANUAL: ${cuota:,.2f}")
+        else:
+            # Calcular cuota automáticamente
+            cuota = calcular_cuota_credito(
+                credito.monto,
+                credito.interes,
+                credito.plazo_meses,
+                credito.frecuencia_pago
+            )
+            print(f"🧮 CUOTA CALCULADA: ${cuota:,.2f}")
+        
+        print(f"\n💳 CREANDO CRÉDITO:")
+        print(f"   Monto: ${credito.monto:,.2f}")
+        print(f"   Interés: {credito.interes}% mensual")
+        print(f"   Plazo: {credito.plazo_meses} meses")
+        print(f"   Cuota manual: ${credito.cuota_manual:,.2f}" if credito.cuota_manual else "   Cuota manual: No usada")
+        print(f"   Cuota a usar: ${cuota:,.2f}")
+        print(f"   Seguro: ${credito.seguro:,.2f}")
+        print(f"   Cuota total: ${cuota + credito.seguro:,.2f}")
+        
+        # Calcular total a pagar (cuota + seguro) * número de cuotas
+        if credito.frecuencia_pago == 'quincenal':
+            total_cuotas = credito.plazo_meses * 2
+        elif credito.frecuencia_pago == 'semanal':
+            total_cuotas = credito.plazo_meses * 4
+        elif credito.frecuencia_pago == 'diario':
+            total_cuotas = credito.plazo_meses * 30
+        else:  # mensual
+            total_cuotas = credito.plazo_meses
+        
+        total_pagar = (cuota + credito.seguro) * total_cuotas
+        
+        # Crear crédito
+        db_credito = models.Credito(
+            nombre_credito=credito.nombre_credito,
+            monto=credito.monto,
+            interes=credito.interes,
+            plazo_meses=credito.plazo_meses,
+            frecuencia_pago=credito.frecuencia_pago,
+            fecha_inicio=credito.fecha_inicio,
+            cuota_manual=credito.cuota_manual,  # ✅ Guardamos el valor manual
+            cuota=cuota,  # Esta es la cuota que realmente se usará (manual o calculada)
+            seguro=credito.seguro,
+            total_pagar=total_pagar,
+            saldo_actual=credito.monto,
+            estado='activo',
+            observaciones=credito.observaciones,
+            usuario_id=usuario_id
+        )
+        
+        db.add(db_credito)
+        db.commit()
+        db.refresh(db_credito)
+        
+        print(f"✅ Crédito creado con ID: {db_credito.id}")
+        
+        return db_credito
+        
+    except Exception as e:
+        print(f"❌ Error al crear crédito: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return None
+
+def obtener_credito(db: Session, credito_id: int):
+    """Obtiene un crédito por ID"""
+    return db.query(models.Credito).filter(models.Credito.id == credito_id).first()
+
+def obtener_creditos_paginados(db: Session, usuario_id: int, page: int = 1,
+                               page_size: int = 10, estado: Optional[str] = None,
+                               frecuencia: Optional[str] = None):
+    """Obtiene créditos paginados con filtros"""
+    query = db.query(models.Credito).filter(models.Credito.usuario_id == usuario_id)
+    
+    if estado:
+        query = query.filter(models.Credito.estado == estado)
+    
+    if frecuencia:
+        query = query.filter(models.Credito.frecuencia_pago == frecuencia)
+    
+    total_items = query.count()
+    total_pages = (total_items + page_size - 1) // page_size if total_items > 0 else 1
+    
+    creditos = query.order_by(models.Credito.fecha_inicio.desc()) \
+                    .offset((page - 1) * page_size) \
+                    .limit(page_size) \
+                    .all()
+    
+    return {
+        "creditos": creditos,
+        "total_pages": total_pages,
+        "current_page": page
+    }
+
+def actualizar_credito(db: Session, credito_id: int, credito: schemas.CreditoUpdate, usuario_id: int):
+    """Actualiza un crédito existente"""
+    db_credito = obtener_credito(db, credito_id)
+    if not db_credito or db_credito.usuario_id != usuario_id:
+        return None
+    
+    # Recalcular cuota si cambiaron monto, interés, plazo o frecuencia
+    recalcular = any([
+        credito.monto is not None,
+        credito.interes is not None,
+        credito.plazo_meses is not None,
+        credito.frecuencia_pago is not None
+    ])
+    
+    if recalcular:
+        monto = credito.monto if credito.monto is not None else db_credito.monto
+        interes = credito.interes if credito.interes is not None else db_credito.interes
+        plazo = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
+        frecuencia = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
+        
+        nueva_cuota = calcular_cuota_credito(monto, interes, plazo, frecuencia)
+        
+        if frecuencia == 'quincenal':
+            total_cuotas = plazo * 2
+        elif frecuencia == 'semanal':
+            total_cuotas = plazo * 4
+        elif frecuencia == 'diario':
+            total_cuotas = plazo * 30
+        else:
+            total_cuotas = plazo
+        
+        seguro = credito.seguro if credito.seguro is not None else db_credito.seguro
+        
+        db_credito.cuota = nueva_cuota
+        db_credito.total_pagar = (nueva_cuota + seguro) * total_cuotas
+    
+    # Actualizar otros campos
+    for key, value in credito.model_dump(exclude_unset=True).items():
+        if key not in ['cuota', 'total_pagar']:  # Estos se calculan automáticamente
+            setattr(db_credito, key, value)
+    
+    # Si solo cambió el seguro, recalcular total_pagar
+    if credito.seguro is not None and not recalcular:
+        if db_credito.frecuencia_pago == 'quincenal':
+            total_cuotas = db_credito.plazo_meses * 2
+        elif db_credito.frecuencia_pago == 'semanal':
+            total_cuotas = db_credito.plazo_meses * 4
+        elif db_credito.frecuencia_pago == 'diario':
+            total_cuotas = db_credito.plazo_meses * 30
+        else:
+            total_cuotas = db_credito.plazo_meses
+        
+        db_credito.total_pagar = (db_credito.cuota + credito.seguro) * total_cuotas
+    
+    db.commit()
+    db.refresh(db_credito)
+    return db_credito
+
+
+def actualizar_credito(db: Session, credito_id: int, credito: schemas.CreditoUpdate, usuario_id: int):
+    """Actualiza un crédito existente - VERSIÓN CORREGIDA"""
+    db_credito = obtener_credito(db, credito_id)
+    if not db_credito or db_credito.usuario_id != usuario_id:
+        return None
+    
+    # ✅ CORREGIDO: Inicializar variables
+    recalcular_total = False
+    cuota_a_usar = db_credito.cuota
+    ha_cambiado_cuota_manual = False
+    
+    # 🔹 1. Si cambia la cuota manual
+    if credito.cuota_manual is not None:
+        db_credito.cuota_manual = credito.cuota_manual
+        ha_cambiado_cuota_manual = True
+        
+        if credito.cuota_manual > 0:
+            # MODO MANUAL: Usar valor del banco
+            cuota_a_usar = credito.cuota_manual
+            print(f"🏦 Actualizando a CUOTA MANUAL: ${cuota_a_usar:,.2f}")
+        else:
+            # MODO CÁLCULO: Volver a calcular
+            cuota_a_usar = calcular_cuota_credito(
+                db_credito.monto, db_credito.interes, 
+                db_credito.plazo_meses, db_credito.frecuencia_pago
+            )
+            print(f"📐 Volviendo a CÁLCULO AUTOMÁTICO: ${cuota_a_usar:,.2f}")
+        
+        recalcular_total = True
+        db_credito.cuota = cuota_a_usar
+    
+    # 🔹 2. Si cambian parámetros de cálculo (monto, interés, plazo, frecuencia)
+    parametros_modificados = any([
+        credito.monto is not None,
+        credito.interes is not None,
+        credito.plazo_meses is not None,
+        credito.frecuencia_pago is not None
+    ])
+    
+    if parametros_modificados and not ha_cambiado_cuota_manual:
+        # Determinar valores nuevos o mantener actuales
+        monto = credito.monto if credito.monto is not None else db_credito.monto
+        interes = credito.interes if credito.interes is not None else db_credito.interes
+        plazo = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
+        frecuencia = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
+        
+        # ¿Usar cuota manual existente o recalcular?
+        if db_credito.cuota_manual and db_credito.cuota_manual > 0:
+            # Mantener cuota manual (no recalcular aunque cambien parámetros)
+            cuota_a_usar = db_credito.cuota_manual
+            print(f"📌 Manteniendo CUOTA MANUAL existente: ${cuota_a_usar:,.2f}")
+        else:
+            # Calcular nueva cuota
+            cuota_a_usar = calcular_cuota_credito(monto, interes, plazo, frecuencia)
+            print(f"🔄 Recalculando cuota: ${cuota_a_usar:,.2f}")
+        
+        recalcular_total = True
+        db_credito.cuota = cuota_a_usar
+    
+    # 🔹 3. Recalcular total_pagar si es necesario
+    if recalcular_total or credito.seguro is not None:
+        # Determinar número de cuotas según frecuencia
+        frecuencia_actual = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
+        plazo_actual = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
+        
+        if frecuencia_actual == 'quincenal':
+            total_cuotas = plazo_actual * 2
+        elif frecuencia_actual == 'semanal':
+            total_cuotas = plazo_actual * 4
+        elif frecuencia_actual == 'diario':
+            total_cuotas = plazo_actual * 30
+        else:
+            total_cuotas = plazo_actual
+        
+        # Determinar seguro actual
+        seguro_actual = credito.seguro if credito.seguro is not None else db_credito.seguro
+        
+        # Calcular total a pagar
+        db_credito.total_pagar = (cuota_a_usar + seguro_actual) * total_cuotas
+    
+    # 🔹 4. Actualizar otros campos
+    for key, value in credito.model_dump(exclude_unset=True).items():
+        if key not in ['cuota', 'total_pagar', 'cuota_manual']:  # Estos ya los manejamos
+            setattr(db_credito, key, value)
+    
+    # 🔹 5. Recalcular cuota_calculada (siempre)
+    db_credito.cuota_calculada = calcular_cuota_credito(
+        db_credito.monto, db_credito.interes, 
+        db_credito.plazo_meses, db_credito.frecuencia_pago
+    )
+    
+    db.commit()
+    db.refresh(db_credito)
+    
+    print(f"✅ Crédito actualizado")
+    print(f"   Cuota real: ${db_credito.cuota:,.2f}")
+    print(f"   Cuota calculada: ${db_credito.cuota_calculada:,.2f}")
+    
+    return db_credito
+
+
+def eliminar_credito(db: Session, credito_id: int, usuario_id: int):
+    """Elimina un crédito"""
+    db_credito = obtener_credito(db, credito_id)
+    if not db_credito or db_credito.usuario_id != usuario_id:
+        return False
+    
+    db.delete(db_credito)
+    db.commit()
+    return True
+
+
+
+# ============================================================================
+# 📇 FUNCIONES DE CONTACTOS
+# ============================================================================
+
+def crear_contacto(db: Session, contacto: schemas.ContactoCreate, usuario_id: int):
+    """Crea un nuevo contacto para un usuario"""
+    db_contacto = models.Contacto(**contacto.model_dump(), usuario_id=usuario_id)
+    db.add(db_contacto)
+    db.commit()
+    db.refresh(db_contacto)
+    return db_contacto
+
+def obtener_contacto(db: Session, contacto_id: int):
+    """Obtiene un contacto por ID"""
+    return db.query(models.Contacto).filter(models.Contacto.id == contacto_id).first()
+
+def obtener_contactos_usuario(db: Session, usuario_id: int, skip: int = 0, limit: int = 100):
+    """Obtiene todos los contactos de un usuario"""
+    return db.query(models.Contacto).filter(
+        models.Contacto.usuario_id == usuario_id
+    ).order_by(models.Contacto.nombres).offset(skip).limit(limit).all()
+
+def obtener_contactos_paginados(db: Session, usuario_id: int, page: int = 1, 
+                               per_page: int = 10, categoria: Optional[str] = None):
+    """
+    Obtiene contactos paginados para un usuario específico
+    
+    Args:
+        db: Sesión de base de datos
+        usuario_id: ID del usuario
+        page: Página actual
+        per_page: Elementos por página
+        categoria: Categoría para filtrar
+    
+    Returns:
+        Dict con contactos, total de páginas y página actual
+    """
+    query = db.query(models.Contacto).filter(models.Contacto.usuario_id == usuario_id)
+    
+    if categoria and categoria != "":
+        query = query.filter(models.Contacto.categoria == categoria)
+    
+    total_items = query.count()
+    total_pages = (total_items + per_page - 1) // per_page if total_items > 0 else 1
+    
+    # Ajustar página
+    if page < 1:
+        page = 1
+    elif page > total_pages and total_pages > 0:
+        page = total_pages
+    
+    contactos = query.order_by(models.Contacto.nombres, models.Contacto.apellidos) \
+                    .offset((page - 1) * per_page) \
+                    .limit(per_page) \
+                    .all()
+    
+    return {
+        "contactos": contactos,
+        "total_pages": total_pages,
+        "current_page": page,
+        "total_items": total_items
+    }
+
+def actualizar_contacto(db: Session, contacto_id: int, 
+                       contacto: schemas.ContactoUpdate, usuario_id: int):
+    """Actualiza un contacto existente"""
+    db_contacto = obtener_contacto(db, contacto_id)
+    if not db_contacto or db_contacto.usuario_id != usuario_id:
+        return None
+    
+    for key, value in contacto.model_dump(exclude_unset=True).items():
+        setattr(db_contacto, key, value)
+    
+    db.commit()
+    db.refresh(db_contacto)
+    return db_contacto
+
+def eliminar_contacto(db: Session, contacto_id: int, usuario_id: int):
+    """Elimina un contacto"""
+    db_contacto = obtener_contacto(db, contacto_id)
+    if not db_contacto or db_contacto.usuario_id != usuario_id:
+        return False
+    
+    db.delete(db_contacto)
+    db.commit()
+    return True
+
+def buscar_contactos(db: Session, usuario_id: int, busqueda: str):
+    """Busca contactos por nombre, apellido, empresa o teléfono"""
+    query = db.query(models.Contacto).filter(models.Contacto.usuario_id == usuario_id)
+    
+    # Búsqueda en múltiples campos
+    busqueda_like = f"%{busqueda}%"
+    resultados = query.filter(
+        or_(
+            models.Contacto.nombres.ilike(busqueda_like),
+            models.Contacto.apellidos.ilike(busqueda_like),
+            models.Contacto.empresa.ilike(busqueda_like),
+            models.Contacto.telefono1.ilike(busqueda_like),
+            models.Contacto.celular1.ilike(busqueda_like),
+            models.Contacto.email.ilike(busqueda_like)
+        )
+    ).all()
+    
+    return resultados

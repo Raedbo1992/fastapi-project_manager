@@ -1,0 +1,542 @@
+{% extends "base_layout.html" %}
+
+{% block title %}📇 Mis Contactos{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='style_contactos_listado.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  
+  <!-- Header -->
+  <div class="contactos-header">
+    <h2><i class="bi bi-person-lines-fill"></i> Mis Contactos</h2>
+    <a href="/contactos/nuevo" class="btn-nuevo">
+      <i class="bi bi-plus-circle"></i> Nuevo Contacto
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-container">
+    <form method="get" action="/contactos" class="filtros-form">
+      
+      <div class="filtro-item">
+        <i class="bi bi-filter"></i>
+        <select name="categoria" onchange="this.form.submit()" aria-label="Filtrar por categoría">
+          <option value="">Todas las categorías</option>
+          <option value="familia" {% if filtro_categoria == 'familia' %}selected{% endif %}>Familia</option>
+          <option value="amigos" {% if filtro_categoria == 'amigos' %}selected{% endif %}>Amigos</option>
+          <option value="trabajo" {% if filtro_categoria == 'trabajo' %}selected{% endif %}>Trabajo</option>
+          <option value="servicios" {% if filtro_categoria == 'servicios' %}selected{% endif %}>Servicios</option>
+          <option value="educacion" {% if filtro_categoria == 'educacion' %}selected{% endif %}>Educación</option>
+          <option value="otro" {% if filtro_categoria == 'otro' %}selected{% endif %}>Otros</option>
+        </select>
+      </div>
+
+      {% if current_page and current_page > 1 %}
+        <input type="hidden" name="page" value="{{ current_page }}">
+      {% endif %}
+
+    </form>
+  </div>
+
+  <!-- Hint de scroll -->
+  <div class="scroll-hint">
+    <i class="bi bi-arrow-left-right"></i> Desliza para ver más información
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-wrapper">
+    <div class="tabla-scroll">
+      <table class="tabla-contactos">
+        <thead>
+          <tr>
+            <th class="sticky-col">Contacto</th>
+            <th>Categoría</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Dirección</th>
+            <th class="sticky-actions acciones-header">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for contacto in contactos %}
+          <tr>
+            
+            <!-- Columna CONTACTO (Solo nombre) -->
+            <td class="sticky-col contacto-cell">
+              <div class="contacto-content">
+                <div class="nombre-contacto">
+                  <span class="nombre-text" 
+                        onclick="openTextModal('Nombre Completo', '{{ contacto.nombres }} {{ contacto.apellidos }}')"
+                        title="{{ contacto.nombres }} {{ contacto.apellidos }}">
+                    <strong>{{ contacto.nombres }} {{ contacto.apellidos }}</strong>
+                  </span>
+                  <button class="btn-copy-small" 
+                          onclick="copiarAlPortapapeles('{{ contacto.nombres }} {{ contacto.apellidos }}', 'Nombre', this)"
+                          data-tooltip="Copiar nombre">
+                    <i class="bi bi-copy"></i>
+                  </button>
+                </div>
+              </div>
+            </td>
+
+            <!-- Columna CATEGORÍA -->
+            <td class="categoria-cell">
+              <div class="categoria-content">
+                <span class="badge-categoria {{ contacto.categoria }}">
+                  {% if contacto.categoria == 'familia' %}
+                    <i class="bi bi-people-fill"></i> Familia
+                  {% elif contacto.categoria == 'amigos' %}
+                    <i class="bi bi-person-heart"></i> Amigos
+                  {% elif contacto.categoria == 'trabajo' %}
+                    <i class="bi bi-briefcase-fill"></i> Trabajo
+                  {% elif contacto.categoria == 'servicios' %}
+                    <i class="bi bi-tools"></i> Servicios
+                  {% elif contacto.categoria == 'educacion' %}
+                    <i class="bi bi-mortarboard-fill"></i> Educación
+                  {% else %}
+                    <i class="bi bi-person"></i> Otro
+                  {% endif %}
+                </span>
+              </div>
+            </td>
+
+            <!-- Columna TELÉFONO (con botón Ver Más) -->
+            <td class="telefono-cell">
+              <div class="telefono-content">
+                {% if contacto.celular1 %}
+                <div class="telefono-principal">
+                  <div class="telefono-info">
+                    <i class="bi bi-phone"></i>
+                    <span class="telefono-text"
+                          onclick="openTextModal('Celular Principal', '{{ contacto.celular1 }}')"
+                          title="{{ contacto.celular1 }}">
+                      {{ contacto.celular1 }}
+                    </span>
+                  </div>
+                  <div class="telefono-acciones">
+                    <button class="btn-copy-small" 
+                            onclick="copiarAlPortapapeles('{{ contacto.celular1 }}', 'Celular Principal', this)"
+                            data-tooltip="Copiar celular">
+                      <i class="bi bi-copy"></i>
+                    </button>
+                    <button class="btn-ver-telefonos" 
+                            onclick="verTodosTelefonos({{ contacto.id }}, '{{ contacto.celular1 }}', '{{ contacto.telefono1 }}', '{{ contacto.celular2 }}')"
+                            data-tooltip="Ver todos los teléfonos">
+                      <i class="bi bi-three-dots"></i>
+                    </button>
+                  </div>
+                </div>
+                {% elif contacto.telefono1 %}
+                <div class="telefono-principal">
+                  <div class="telefono-info">
+                    <i class="bi bi-telephone"></i>
+                    <span class="telefono-text"
+                          onclick="openTextModal('Teléfono Fijo', '{{ contacto.telefono1 }}')"
+                          title="{{ contacto.telefono1 }}">
+                      {{ contacto.telefono1 }}
+                    </span>
+                  </div>
+                  <div class="telefono-acciones">
+                    <button class="btn-copy-small" 
+                            onclick="copiarAlPortapapeles('{{ contacto.telefono1 }}', 'Teléfono Fijo', this)"
+                            data-tooltip="Copiar teléfono">
+                      <i class="bi bi-copy"></i>
+                    </button>
+                    <button class="btn-ver-telefonos" 
+                            onclick="verTodosTelefonos({{ contacto.id }}, '{{ contacto.celular1 }}', '{{ contacto.telefono1 }}', '{{ contacto.celular2 }}')"
+                            data-tooltip="Ver todos los teléfonos">
+                      <i class="bi bi-three-dots"></i>
+                    </button>
+                  </div>
+                </div>
+                {% else %}
+                <span class="sin-datos">-</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Columna CORREO -->
+            <td class="correo-cell">
+              <div class="correo-content">
+                {% if contacto.email %}
+                <div class="email-contacto">
+                  <i class="bi bi-envelope"></i>
+                  <a href="mailto:{{ contacto.email }}" 
+                     class="email-text"
+                     onclick="openTextModal('Correo Electrónico', '{{ contacto.email }}'); return false;"
+                     title="{{ contacto.email }}">
+                    {{ contacto.email|truncate(25) }}
+                  </a>
+                  <button class="btn-copy-small" 
+                          onclick="copiarAlPortapapeles('{{ contacto.email }}', 'Email', this)"
+                          data-tooltip="Copiar email">
+                    <i class="bi bi-copy"></i>
+                  </button>
+                </div>
+                {% else %}
+                <span class="sin-datos">-</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Columna DIRECCIÓN -->
+            <td class="direccion-cell">
+              <div class="direccion-content">
+                {% if contacto.direccion %}
+                <div class="direccion-container">
+                  <div class="direccion-info">
+                    <i class="bi bi-geo-alt"></i>
+                    <span class="direccion-text"
+                          onclick="openTextModal('Dirección Completa', '{{ contacto.direccion }}')"
+                          title="{{ contacto.direccion }}">
+                      {{ contacto.direccion|truncate(30) }}
+                    </span>
+                  </div>
+                  <div class="direccion-acciones">
+                    <button class="btn-copy-small" 
+                            onclick="copiarAlPortapapeles('{{ contacto.direccion }}', 'Dirección', this)"
+                            data-tooltip="Copiar dirección">
+                      <i class="bi bi-copy"></i>
+                    </button>
+                  </div>
+                </div>
+                {% else %}
+                <span class="sin-datos">-</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <!-- Columna ACCIONES -->
+            <td class="sticky-actions acciones-cell">
+              <div class="acciones">
+                <a href="/contactos/editar/{{ contacto.id }}" class="btn-icon edit" title="Editar">
+                  <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="/contactos/eliminar/{{ contacto.id }}" 
+                   class="btn-icon delete eliminar-btn" 
+                   data-id="{{ contacto.id }}"
+                   title="Eliminar">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
+            
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="no-data">
+              <i class="bi bi-person-x"></i> No hay contactos registrados
+              <p class="no-data-sub">Presiona "Nuevo Contacto" para agregar uno</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal para texto completo -->
+  <div id="text-modal" class="text-modal">
+    <div class="text-modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button onclick="closeTextModal()" class="modal-close">
+          &times;
+        </button>
+      </div>
+      
+      <div id="modal-content" class="modal-text-display"></div>
+      
+      <div class="modal-actions">
+        <button onclick="copyFromModal()" class="btn-modal-copy">
+          <i class="bi bi-copy"></i> Copiar
+        </button>
+        <button onclick="closeTextModal()" class="btn-modal-close">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para ver todos los teléfonos -->
+  <div id="telefonos-modal" class="telefonos-modal">
+    <div class="telefonos-modal-content">
+      <div class="modal-header">
+        <h3><i class="bi bi-telephone"></i> Todos los Teléfonos</h3>
+        <button onclick="closeTelefonosModal()" class="modal-close">
+          &times;
+        </button>
+      </div>
+      
+      <div class="telefonos-lista" id="telefonos-lista">
+        <!-- Los teléfonos se cargarán aquí dinámicamente -->
+      </div>
+      
+      <div class="modal-actions">
+        <button onclick="closeTelefonosModal()" class="btn-modal-close">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div id="copy-toast" class="copy-toast">
+    <div class="toast-content">
+      <i class="bi bi-check-circle-fill"></i>
+      <span id="toast-text"></span>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  {% if total_pages > 1 %}
+  <div class="paginacion">
+      
+      <a href="?page={% if current_page > 1 %}{{ current_page - 1 }}{% else %}1{% endif %}{% if filtro_categoria %}&categoria={{ filtro_categoria }}{% endif %}" 
+         class="pag-btn pag-nav {% if current_page == 1 %}disabled{% endif %}">
+          <i class="bi bi-chevron-left"></i>
+      </a>
+
+      <div class="pag-info-mobile">
+        {{ current_page }} / {{ total_pages }}
+      </div>
+
+      <div class="pag-numbers">
+        <a href="?page=1{% if filtro_categoria %}&categoria={{ filtro_categoria }}{% endif %}" 
+           class="pag-btn {% if current_page == 1 %}active{% endif %}">1</a>
+
+        {% if current_page > 3 %}<span class="pag-dots">...</span>{% endif %}
+
+        {% for p in range([2, current_page-1]|max, [current_page+2, total_pages]|min) %}
+            <a href="?page={{ p }}{% if filtro_categoria %}&categoria={{ filtro_categoria }}{% endif %}" 
+               class="pag-btn {% if p == current_page %}active{% endif %}">{{ p }}</a>
+        {% endfor %}
+
+        {% if current_page < total_pages - 2 %}<span class="pag-dots">...</span>{% endif %}
+
+        {% if total_pages > 1 %}
+        <a href="?page={{ total_pages }}{% if filtro_categoria %}&categoria={{ filtro_categoria }}{% endif %}" 
+           class="pag-btn {% if current_page == total_pages %}active{% endif %}">{{ total_pages }}</a>
+        {% endif %}
+      </div>
+
+      <a href="?page={% if current_page < total_pages %}{{ current_page + 1 }}{% else %}{{ total_pages }}{% endif %}{% if filtro_categoria %}&categoria={{ filtro_categoria }}{% endif %}" 
+         class="pag-btn pag-nav {% if current_page == total_pages %}disabled{% endif %}">
+          <i class="bi bi-chevron-right"></i>
+      </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  
+  // Confirmación para eliminar contacto
+  document.querySelectorAll(".eliminar-btn").forEach(function(btn) {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: '¿Eliminar contacto?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = `/contactos/eliminar/${btn.dataset.id}`;
+        }
+      });
+    });
+  });
+
+  // Mostrar mensajes de éxito/error
+  {% if mensaje %}
+    Swal.fire({
+      title: '{{ mensaje.titulo }}',
+      text: '{{ mensaje.texto }}',
+      icon: '{{ mensaje.tipo }}',
+      confirmButtonColor: '#3b82f6'
+    });
+  {% endif %}
+
+  // Ocultar hint de scroll
+  const scrollHint = document.querySelector('.scroll-hint');
+  const tablaScroll = document.querySelector('.tabla-scroll');
+  
+  if (tablaScroll && scrollHint) {
+    tablaScroll.addEventListener('scroll', () => {
+      scrollHint.style.opacity = '0';
+      setTimeout(() => scrollHint.remove(), 300);
+    }, { once: true });
+    
+    setTimeout(() => {
+      if (scrollHint) {
+        scrollHint.style.opacity = '0';
+        setTimeout(() => scrollHint.remove(), 300);
+      }
+    }, 4000);
+  }
+
+  // Función para copiar texto (ESTILO IGUAL QUE CONTRASEÑAS)
+  window.copiarAlPortapapeles = function(texto, tipo, elemento) {
+    if (!texto || texto === '-' || texto === '••••••••') return;
+    
+    navigator.clipboard.writeText(texto).then(() => {
+      const toast = document.getElementById('copy-toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = `${tipo} copiado al portapapeles`;
+      toast.classList.add('show');
+      
+      if (elemento) {
+        elemento.classList.add('copied');
+        setTimeout(() => elemento.classList.remove('copied'), 1000);
+      }
+      
+      setTimeout(() => toast.classList.remove('show'), 2000);
+      
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo copiar al portapapeles',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
+    });
+  };
+  
+  // Ver todos los teléfonos en un modal
+  window.verTodosTelefonos = function(id, celular1, telefono1, celular2) {
+    const modal = document.getElementById('telefonos-modal');
+    const lista = document.getElementById('telefonos-lista');
+    
+    let contenido = '';
+    
+    if (celular1 && celular1.trim() !== '') {
+      contenido += `
+        <div class="telefono-item">
+          <div class="telefono-icon">
+            <i class="bi bi-phone"></i>
+          </div>
+          <div class="telefono-info">
+            <div class="telefono-titulo">Celular Principal</div>
+            <div class="telefono-numero">${celular1.trim()}</div>
+          </div>
+          <div class="telefono-accion">
+            <button class="btn-copy-modal" onclick="copiarAlPortapapeles('${celular1.trim()}', 'Celular Principal')">
+              <i class="bi bi-copy"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (telefono1 && telefono1.trim() !== '') {
+      contenido += `
+        <div class="telefono-item">
+          <div class="telefono-icon">
+            <i class="bi bi-telephone"></i>
+          </div>
+          <div class="telefono-info">
+            <div class="telefono-titulo">Teléfono Fijo</div>
+            <div class="telefono-numero">${telefono1.trim()}</div>
+          </div>
+          <div class="telefono-accion">
+            <button class="btn-copy-modal" onclick="copiarAlPortapapeles('${telefono1.trim()}', 'Teléfono Fijo')">
+              <i class="bi bi-copy"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (celular2 && celular2.trim() !== '') {
+      contenido += `
+        <div class="telefono-item">
+          <div class="telefono-icon">
+            <i class="bi bi-phone-vibrate"></i>
+          </div>
+          <div class="telefono-info">
+            <div class="telefono-titulo">Celular Alternativo</div>
+            <div class="telefono-numero">${celular2.trim()}</div>
+          </div>
+          <div class="telefono-accion">
+            <button class="btn-copy-modal" onclick="copiarAlPortapapeles('${celular2.trim()}', 'Celular Alternativo')">
+              <i class="bi bi-copy"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (contenido === '') {
+      contenido = '<div class="sin-telefonos"><i class="bi bi-telephone-x"></i> No hay teléfonos registrados</div>';
+    }
+    
+    lista.innerHTML = contenido;
+    modal.style.display = 'flex';
+  };
+  
+  // Cerrar modal de teléfonos
+  window.closeTelefonosModal = function() {
+    document.getElementById('telefonos-modal').style.display = 'none';
+  };
+  
+  // Abrir modal para texto completo
+  window.openTextModal = function(titulo, contenido) {
+    const modal = document.getElementById('text-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    
+    modalTitle.textContent = titulo;
+    modalContent.textContent = contenido;
+    
+    modal.style.display = 'flex';
+  };
+  
+  // Cerrar modal
+  window.closeTextModal = function() {
+    document.getElementById('text-modal').style.display = 'none';
+  };
+  
+  // Copiar del modal
+  window.copyFromModal = function() {
+    const content = document.getElementById('modal-content');
+    const text = content.textContent || content.innerText;
+    const titulo = document.getElementById('modal-title').textContent;
+    copiarAlPortapapeles(text, titulo, null);
+  };
+  
+  // Cerrar modales con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeTextModal();
+      closeTelefonosModal();
+    }
+  });
+  
+  // Cerrar modales al hacer clic fuera
+  document.getElementById('text-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTextModal();
+    }
+  });
+  
+  document.getElementById('telefonos-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTelefonosModal();
+    }
+  });
+});
+</script>
+{% endblock %}

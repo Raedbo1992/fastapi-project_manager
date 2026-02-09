@@ -1,0 +1,190 @@
+{% extends "base_layout.html" %}
+
+{% block title %}{{ "Editar Contacto" if contacto else "Nuevo Contacto" }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', path='style_contactos_form.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+  <div class="form-card">
+    <h2 class="form-title">
+      <i class="bi bi-{{ 'person-check' if contacto else 'person-plus' }}"></i>
+      {{ "Editar Contacto" if contacto else "Nuevo Contacto" }}
+    </h2>
+
+    <form method="post" action="/contactos/guardar">
+      {% if contacto %}
+        <input type="hidden" name="id" value="{{ contacto.id }}">
+      {% endif %}
+
+      <!-- Información Básica -->
+      <div class="section-divider">
+        <i class="bi bi-person-badge"></i> Información Básica
+      </div>
+
+      <div class="form-group">
+        <label for="nombres"><i class="bi bi-person"></i> Nombres *</label>
+        <input type="text" 
+               name="nombres" 
+               id="nombres"
+               value="{{ contacto.nombres if contacto else '' }}" 
+               placeholder="Ej: Juan Carlos" 
+               required>
+      </div>
+
+      <div class="form-group">
+        <label for="apellidos"><i class="bi bi-person"></i> Apellidos *</label>
+        <input type="text" 
+               name="apellidos" 
+               id="apellidos"
+               value="{{ contacto.apellidos if contacto else '' }}" 
+               placeholder="Ej: Pérez Gómez" 
+               required>
+      </div>
+
+      <div class="form-group">
+        <label for="categoria"><i class="bi bi-tags"></i> Categoría *</label>
+        <select name="categoria" id="categoria" required>
+          <option value="familia" {% if contacto and contacto.categoria == 'familia' %}selected{% endif %}>Familia</option>
+          <option value="amigos" {% if contacto and contacto.categoria == 'amigos' %}selected{% endif %}>Amigos</option>
+          <option value="trabajo" {% if contacto and contacto.categoria == 'trabajo' %}selected{% endif %}>Trabajo</option>
+          <option value="servicios" {% if contacto and contacto.categoria == 'servicios' %}selected{% endif %}>Servicios</option>
+          <option value="educacion" {% if contacto and contacto.categoria == 'educacion' %}selected{% endif %}>Educación</option>
+          <option value="otro" {% if contacto and contacto.categoria == 'otro' or not contacto %}selected{% endif %}>Otro</option>
+        </select>
+      </div>
+
+          <!-- CUARTA FILA: Correo -->
+      <div class="form-group">
+        <label for="email"><i class="bi bi-envelope"></i> Correo Electrónico</label>
+        <input type="email" 
+               name="email" 
+               id="email"
+               value="{{ contacto.email if contacto else '' }}" 
+               placeholder="ejemplo@correo.com">
+      </div>
+      
+      <!-- Información de Contacto -->
+      <!-- Reemplazar la sección de teléfonos con esto: -->
+
+<div class="section-divider">
+  <i class="bi bi-phone"></i> Teléfonos
+</div>
+
+<div class="form-group">
+  <label for="celular1"><i class="bi bi-phone"></i> Celular Principal *</label>
+  <input type="tel" 
+         name="celular1" 
+         id="celular1"
+         value="{{ contacto.celular1 if contacto else '' }}" 
+         placeholder="Ej: 311 123 4567"
+         pattern="[0-9\s\-\+\(\)]+"
+         required>
+  <small class="text-muted">Número principal de contacto</small>
+</div>
+
+<div class="form-group">
+  <label for="celular2"><i class="bi bi-phone-vibrate"></i> Celular Alternativo</label>
+  <input type="tel" 
+         name="celular2" 
+         id="celular2"
+         value="{{ contacto.celular2 if contacto else '' }}" 
+         placeholder="Ej: 321 987 6543"
+         pattern="[0-9\s\-\+\(\)]+">
+  <small class="text-muted">Número de respaldo o emergencia</small>
+</div>
+
+      <!-- Información Adicional -->
+      <div class="section-divider">
+        <i class="bi bi-geo-alt"></i> Información Adicional
+      </div>
+
+      <div class="form-group full-width">
+        <label for="direccion"><i class="bi bi-house-door"></i> Dirección</label>
+        <input type="text" 
+               name="direccion" 
+               id="direccion"
+               value="{{ contacto.direccion if contacto else '' }}" 
+               placeholder="Ej: Calle 123 #45-67, Ciudad">
+      </div>
+
+      <div class="form-group full-width">
+        <label for="notas"><i class="bi bi-card-text"></i> Notas</label>
+        <textarea name="notas" id="notas" rows="3" placeholder="Información adicional sobre el contacto...">
+          {{ contacto.notas if contacto else '' }}
+        </textarea>
+        <small class="text-muted">Puedes agregar cumpleaños, intereses, referencias, etc.</small>
+      </div>
+
+      <!-- Botones -->
+      <div class="form-actions">
+        <a href="/contactos" class="btn-cancelar">
+          <i class="bi bi-arrow-left"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-guardar">
+          <i class="bi bi-save"></i> {{ "Actualizar" if contacto else "Guardar Contacto" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Autoformato para números telefónicos
+  const formatPhoneNumber = (input) => {
+    let value = input.value.replace(/\D/g, '');
+    
+    if (value.length > 0) {
+      if (value.length <= 3) {
+        value = value;
+      } else if (value.length <= 6) {
+        value = `${value.slice(0, 3)} ${value.slice(3)}`;
+      } else if (value.length <= 10) {
+        value = `${value.slice(0, 3)} ${value.slice(3, 6)} ${value.slice(6)}`;
+      } else {
+        value = `${value.slice(0, 3)} ${value.slice(3, 6)} ${value.slice(6, 10)}`;
+      }
+    }
+    
+    input.value = value;
+  };
+
+  // Aplicar formato a los campos de teléfono
+  const phoneInputs = document.querySelectorAll('input[type="tel"]');
+  phoneInputs.forEach(input => {
+    input.addEventListener('input', () => formatPhoneNumber(input));
+    input.addEventListener('blur', () => formatPhoneNumber(input));
+  });
+
+  // Validar email
+  const emailInput = document.getElementById('email');
+  if (emailInput) {
+    emailInput.addEventListener('blur', function() {
+      if (this.value && !this.value.includes('@')) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Email no válido',
+          text: 'Por favor ingresa un correo electrónico válido',
+          confirmButtonColor: '#3b82f6'
+        });
+        this.focus();
+      }
+    });
+  }
+
+  // Mostrar mensajes
+  {% if mensaje %}
+    Swal.fire({
+      title: '{{ mensaje.titulo }}',
+      text: '{{ mensaje.texto }}',
+      icon: '{{ mensaje.tipo }}',
+      confirmButtonColor: '#3085d6'
+    });
+  {% endif %}
+});
+</script>
+{% endblock %}

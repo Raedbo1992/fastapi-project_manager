@@ -11,6 +11,14 @@ from app.config.database import get_db
 from app.schema import models, schemas
 from app.repository import crud
 
+
+from fastapi.responses import StreamingResponse
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from io import BytesIO
+
+
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
@@ -1394,3 +1402,859 @@ async def debug_form(request: Request):
         print(f"  {key}: {value}")
     
     return {"status": "ok", "data": dict(form_data)}
+
+
+# ============================================================================
+# 💳 FUNCIONES DE CRÉDITOS
+# ============================================================================
+
+@router.post("/creditos/guardar")
+def guardar_credito(
+    request: Request,
+    id: Optional[int] = Form(None),
+    nombre_credito: str = Form(...),
+    monto: float = Form(...),
+    interes: float = Form(...),
+    plazo_meses: int = Form(...),
+    frecuencia_pago: str = Form("mensual"),
+    fecha_inicio: str = Form(...),
+    seguro: float = Form(0),
+    cuota_manual: float = Form(0),  # ✅ AÑADIDO
+    observaciones: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    """Guardar crédito (crear o actualizar)"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    try:
+        print(f"\n{'='*60}")
+        print(f"{'📝 EDITANDO CRÉDITO' if id else '➕ CREANDO NUEVO CRÉDITO'}")
+        print(f"Cuota manual recibida: ${cuota_manual:,.2f}")
+        print(f"{'='*60}")
+        
+        fecha_inicio_dt = date.fromisoformat(fecha_inicio)
+        
+        credito_data = schemas.CreditoCreate(
+            nombre_credito=nombre_credito,
+            monto=monto,
+            interes=interes,
+            plazo_meses=plazo_meses,
+            frecuencia_pago=frecuencia_pago,
+            fecha_inicio=fecha_inicio_dt,
+            seguro=seguro,
+            cuota_manual=cuota_manual,  # ✅ Pasar la cuota manual
+            observaciones=observaciones
+        )
+        
+        if id:
+            credito_update = schemas.CreditoUpdate(**credito_data.model_dump())
+            crud.actualizar_credito(db, credito_id=int(id), credito=credito_update, usuario_id=usuario_id)
+            mensaje = "Crédito actualizado correctamente"
+        else:
+            crud.crear_credito(db, credito=credito_data, usuario_id=usuario_id)
+            mensaje = "Crédito creado correctamente"
+        
+        request.session['mensaje'] = {
+            'tipo': 'exito',
+            'titulo': '¡Éxito!',
+            'texto': mensaje
+        }
+        
+    except Exception as e:
+        print(f"\n❌ ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        request.session['mensaje'] = {
+            'tipo': 'error',
+            'titulo': 'Error',
+            'texto': f'Error: {str(e)}'
+        }
+    
+    return RedirectResponse(url="/creditos", status_code=303)
+
+
+def calcular_cuota_credito(monto: float, interes_mensual: float, plazo_meses: int, 
+                          frecuencia: str = 'mensual') -> float:
+    """
+    Calcula la cuota de un crédito usando fórmula de amortización francesa
+    
+    Args:
+        monto: Monto del crédito
+        interes_mensual: Tasa de interés MENSUAL en porcentaje (ej: 1.4 para 1.4%)
+        plazo_meses: Plazo en meses
+        frecuencia: Frecuencia de pago ('mensual' principalmente)
+    
+    Returns:
+        Cuota calculada (solo del crédito, sin seguro)
+    """
+    if interes_mensual == 0:
+        return round(monto / plazo_meses, 2)
+    
+    i = interes_mensual / 100
+    
+    if frecuencia == 'quincenal':
+        i = i / 2
+        n = plazo_meses * 2
+    elif frecuencia == 'semanal':
+        i = i / 4
+        n = plazo_meses * 4
+    elif frecuencia == 'diario':
+        i = i / 30
+        n = plazo_meses * 30
+    else:
+        n = plazo_meses
+    
+    try:
+        numerador = i * pow(1 + i, n)
+        denominador = pow(1 + i, n) - 1
+        cuota = monto * (numerador / denominador)
+        return round(cuota, 2)
+    except Exception as e:
+        print(f"Error en cálculo de cuota: {e}")
+        return 0.0
+
+def crear_credito(db: Session, credito: schemas.CreditoCreate, usuario_id: int):
+    """Crea un nuevo crédito para un usuario con dos modos: cálculo o manual"""
+    try:
+        # 🔹 MODE 1: CUOTA MANUAL (BANCO)
+        if credito.cuota_manual and credito.cuota_manual > 0:
+            cuota_real = credito.cuota_manual
+            cuota_calculada = calcular_cuota_credito(
+                credito.monto, credito.interes, credito.plazo_meses, credito.frecuencia_pago
+            )
+            print(f"🏦 MODO MANUAL ACTIVADO")
+            print(f"   Cuota banco: ${cuota_real:,.2f}")
+            print(f"   Cuota calculada: ${cuota_calculada:,.2f}")
+            print(f"   Diferencia: ${cuota_real - cuota_calculada:,.2f}")
+        
+        # 🔹 MODE 2: CÁLCULO AUTOMÁTICO
+        else:
+            cuota_calculada = calcular_cuota_credito(
+                credito.monto, credito.interes, credito.plazo_meses, credito.frecuencia_pago
+            )
+            cuota_real = cuota_calculada  # Son iguales en modo cálculo
+            print(f"📐 MODO CÁLCULO AUTOMÁTICO")
+            print(f"   Cuota calculada: ${cuota_calculada:,.2f}")
+        
+        print(f"\n💳 RESUMEN CRÉDITO:")
+        print(f"   Monto: ${credito.monto:,.2f}")
+        print(f"   Interés: {credito.interes}% mensual")
+        print(f"   Plazo: {credito.plazo_meses} meses")
+        print(f"   Seguro: ${credito.seguro:,.2f}")
+        print(f"   Cuota REAL a pagar: ${cuota_real:,.2f}")
+        print(f"   Cuota TOTAL (con seguro): ${cuota_real + credito.seguro:,.2f}")
+        
+        # Calcular total a pagar (cuota REAL + seguro) * número de cuotas
+        if credito.frecuencia_pago == 'quincenal':
+            total_cuotas = credito.plazo_meses * 2
+        elif credito.frecuencia_pago == 'semanal':
+            total_cuotas = credito.plazo_meses * 4
+        elif credito.frecuencia_pago == 'diario':
+            total_cuotas = credito.plazo_meses * 30
+        else:
+            total_cuotas = credito.plazo_meses
+        
+        total_pagar = (cuota_real + credito.seguro) * total_cuotas
+        
+        # Crear crédito con AMBAS cuotas
+        db_credito = models.Credito(
+            nombre_credito=credito.nombre_credito,
+            monto=credito.monto,
+            interes=credito.interes,
+            plazo_meses=credito.plazo_meses,
+            frecuencia_pago=credito.frecuencia_pago,
+            fecha_inicio=credito.fecha_inicio,
+            
+            # ✅ GUARDAR AMBAS
+            cuota_manual=credito.cuota_manual,  # Lo que ingresó el usuario (0 o valor)
+            cuota=cuota_real,  # Lo que REALMENTE se pagará (manual o calculada)
+            cuota_calculada=calcular_cuota_credito(  # Lo que la fórmula dice
+                credito.monto, credito.interes, credito.plazo_meses, credito.frecuencia_pago
+            ),
+            
+            seguro=credito.seguro,
+            total_pagar=total_pagar,
+            saldo_actual=credito.monto,
+            estado='activo',
+            observaciones=credito.observaciones,
+            usuario_id=usuario_id
+        )
+        
+        db.add(db_credito)
+        db.commit()
+        db.refresh(db_credito)
+        
+        print(f"✅ Crédito creado con ID: {db_credito.id}")
+        print(f"   Modo: {'MANUAL (banco)' if credito.cuota_manual > 0 else 'CÁLCULO automático'}")
+        
+        return db_credito
+        
+    except Exception as e:
+        print(f"❌ Error al crear crédito: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return None
+
+def obtener_credito(db: Session, credito_id: int):
+    return db.query(models.Credito).filter(models.Credito.id == credito_id).first()
+
+def obtener_creditos_paginados(db: Session, usuario_id: int, page: int = 1,
+                               page_size: int = 10, estado: Optional[str] = None,
+                               frecuencia: Optional[str] = None):
+    query = db.query(models.Credito).filter(models.Credito.usuario_id == usuario_id)
+    
+    if estado:
+        query = query.filter(models.Credito.estado == estado)
+    if frecuencia:
+        query = query.filter(models.Credito.frecuencia_pago == frecuencia)
+    
+    total_items = query.count()
+    total_pages = (total_items + page_size - 1) // page_size if total_items > 0 else 1
+    
+    creditos = query.order_by(models.Credito.fecha_inicio.desc()) \
+                    .offset((page - 1) * page_size) \
+                    .limit(page_size) \
+                    .all()
+    
+    return {
+        "creditos": creditos,
+        "total_pages": total_pages,
+        "current_page": page
+    }
+
+def actualizar_credito(db: Session, credito_id: int, credito: schemas.CreditoUpdate, usuario_id: int):
+    """Actualiza un crédito existente - VERSIÓN CORREGIDA"""
+    db_credito = obtener_credito(db, credito_id)
+    if not db_credito or db_credito.usuario_id != usuario_id:
+        return None
+    
+    # ✅ CORREGIDO: Inicializar variables
+    recalcular_total = False
+    cuota_a_usar = db_credito.cuota
+    ha_cambiado_cuota_manual = False
+    
+    # 🔹 1. Si cambia la cuota manual
+    if credito.cuota_manual is not None:
+        db_credito.cuota_manual = credito.cuota_manual
+        ha_cambiado_cuota_manual = True
+        
+        if credito.cuota_manual > 0:
+            # MODO MANUAL: Usar valor del banco
+            cuota_a_usar = credito.cuota_manual
+            print(f"🏦 Actualizando a CUOTA MANUAL: ${cuota_a_usar:,.2f}")
+        else:
+            # MODO CÁLCULO: Volver a calcular
+            cuota_a_usar = calcular_cuota_credito(
+                db_credito.monto, db_credito.interes, 
+                db_credito.plazo_meses, db_credito.frecuencia_pago
+            )
+            print(f"📐 Volviendo a CÁLCULO AUTOMÁTICO: ${cuota_a_usar:,.2f}")
+        
+        recalcular_total = True
+    
+    # 🔹 2. Si cambian parámetros de cálculo (monto, interés, plazo, frecuencia)
+    parametros_modificados = any([
+        credito.monto is not None,
+        credito.interes is not None,
+        credito.plazo_meses is not None,
+        credito.frecuencia_pago is not None
+    ])
+    
+    if parametros_modificados and not ha_cambiado_cuota_manual:
+        # Determinar valores nuevos o mantener actuales
+        monto = credito.monto if credito.monto is not None else db_credito.monto
+        interes = credito.interes if credito.interes is not None else db_credito.interes
+        plazo = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
+        frecuencia = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
+        
+        # ¿Usar cuota manual existente o recalcular?
+        if db_credito.cuota_manual and db_credito.cuota_manual > 0:
+            # Mantener cuota manual (no recalcular aunque cambien parámetros)
+            cuota_a_usar = db_credito.cuota_manual
+            print(f"📌 Manteniendo CUOTA MANUAL existente: ${cuota_a_usar:,.2f}")
+        else:
+            # Calcular nueva cuota
+            cuota_a_usar = calcular_cuota_credito(monto, interes, plazo, frecuencia)
+            print(f"🔄 Recalculando cuota: ${cuota_a_usar:,.2f}")
+        
+        recalcular_total = True
+    
+    # 🔹 3. Actualizar la cuota REAL que se usará
+    db_credito.cuota = cuota_a_usar
+    
+    # 🔹 4. Recalcular total_pagar si es necesario
+    if recalcular_total or credito.seguro is not None:
+        # Determinar número de cuotas según frecuencia
+        frecuencia_actual = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
+        plazo_actual = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
+        
+        if frecuencia_actual == 'quincenal':
+            total_cuotas = plazo_actual * 2
+        elif frecuencia_actual == 'semanal':
+            total_cuotas = plazo_actual * 4
+        elif frecuencia_actual == 'diario':
+            total_cuotas = plazo_actual * 30
+        else:
+            total_cuotas = plazo_actual
+        
+        # Determinar seguro actual
+        seguro_actual = credito.seguro if credito.seguro is not None else db_credito.seguro
+        
+        # Calcular total a pagar
+        db_credito.total_pagar = (cuota_a_usar + seguro_actual) * total_cuotas
+    
+    # 🔹 5. Actualizar otros campos
+    for key, value in credito.model_dump(exclude_unset=True).items():
+        if key not in ['cuota', 'total_pagar']:  # Estos ya los manejamos
+            setattr(db_credito, key, value)
+    
+    # 🔹 6. Recalcular cuota_calculada (siempre)
+    db_credito.cuota_calculada = calcular_cuota_credito(
+        db_credito.monto, db_credito.interes, 
+        db_credito.plazo_meses, db_credito.frecuencia_pago
+    )
+    
+    db.commit()
+    db.refresh(db_credito)
+    
+    print(f"✅ Crédito actualizado")
+    print(f"   Cuota real: ${db_credito.cuota:,.2f}")
+    print(f"   Cuota calculada: ${db_credito.cuota_calculada:,.2f}")
+    print(f"   Diferencia: ${db_credito.cuota - db_credito.cuota_calculada:,.2f}")
+    
+    return db_credito
+
+# def eliminar_credito(db: Session, credito_id: int, usuario_id: int):
+#     db_credito = obtener_credito(db, credito_id)
+#     if not db_credito or db_credito.usuario_id != usuario_id:
+#         return False
+    
+#     db.delete(db_credito)
+#     db.commit()
+#     return True
+
+
+# ============================================================================
+# RUTAS DE CRÉDITOS (COMPLETAS)
+# ============================================================================
+
+@router.get("/creditos")
+def listar_creditos(
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = 1,
+    estado: Optional[str] = None,
+    frecuencia: Optional[str] = None
+):
+    """Listar créditos del usuario"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    print(f"\n=== LISTANDO CRÉDITOS PARA USUARIO ID: {usuario_id} ===")
+    print(f"Filtros - estado: '{estado}', frecuencia: '{frecuencia}'")
+    
+    data = crud.obtener_creditos_paginados(
+        db,
+        usuario_id,
+        page=page,
+        estado=estado,
+        frecuencia=frecuencia
+    )
+    
+    mensaje = request.session.pop("mensaje", None)
+    
+    return templates.TemplateResponse(
+        "creditos_listado.html",
+        {
+            "request": request,
+            "creditos": data["creditos"],
+            "total_pages": data["total_pages"],
+            "current_page": page,
+            "filtro_estado": estado,
+            "filtro_frecuencia": frecuencia,
+            "mensaje": mensaje
+        }
+    )
+
+@router.get("/creditos/nuevo", response_class=HTMLResponse)
+@router.get("/creditos/editar/{credito_id}", response_class=HTMLResponse)
+def formulario_credito(
+    request: Request,
+    credito_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """Mostrar formulario para crear/editar crédito"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    credito = None
+    if credito_id:
+        credito = crud.obtener_credito(db, credito_id)
+        if not credito or credito.usuario_id != usuario_id:
+            raise HTTPException(status_code=404, detail="Crédito no encontrado")
+    
+    return templates.TemplateResponse("creditos_form.html", {
+        "request": request,
+        "credito": credito
+    })
+
+@router.get("/creditos/eliminar/{credito_id}")
+def eliminar_credito(
+    request: Request,
+    credito_id: int,
+    db: Session = Depends(get_db)
+):
+    """Eliminar un crédito"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    credito = crud.obtener_credito(db, credito_id)
+    if not credito or credito.usuario_id != usuario_id:
+        raise HTTPException(status_code=404, detail="Crédito no encontrado")
+    
+    crud.eliminar_credito(db, credito_id, usuario_id)
+    
+    request.session["mensaje"] = {
+        "tipo": "exito",
+        "titulo": "¡Eliminado!",
+        "texto": "Crédito eliminado correctamente"
+    }
+    
+    return RedirectResponse(url="/creditos", status_code=303)
+
+# Agregar al archivo routes.py después de las rutas de cumpleaños
+
+# ============================================================================
+# RUTAS DE CONTACTOS
+# ============================================================================
+
+@router.get("/contactos")
+def listar_contactos(
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = 1,
+    categoria: Optional[str] = None
+):
+    """Listar todos los contactos del usuario"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    print(f"\n=== LISTANDO CONTACTOS PARA USUARIO ID: {usuario_id} ===")
+    print(f"Filtro recibido - categoria: '{categoria}'")
+    
+    data = crud.obtener_contactos_paginados(
+        db,
+        usuario_id,
+        page=page,
+        categoria=categoria
+    )
+    
+    mensaje = request.session.pop("mensaje", None)
+    
+    return templates.TemplateResponse(
+        "contactos_listado.html",
+        {
+            "request": request,
+            "contactos": data["contactos"],
+            "total_pages": data["total_pages"],
+            "current_page": page,
+            "filtro_categoria": categoria,
+            "mensaje": mensaje
+        }
+    )
+
+@router.get("/contactos/nuevo", response_class=HTMLResponse)
+@router.get("/contactos/editar/{contacto_id}", response_class=HTMLResponse)
+def formulario_contacto(
+    request: Request,
+    contacto_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """Mostrar formulario para crear/editar contacto"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    contacto = None
+    if contacto_id:
+        contacto = crud.obtener_contacto(db, contacto_id)
+        if not contacto or contacto.usuario_id != usuario_id:
+            raise HTTPException(status_code=404, detail="Contacto no encontrado")
+    
+    return templates.TemplateResponse("contactos_form.html", {
+        "request": request,
+        "contacto": contacto
+    })
+
+@router.post("/contactos/guardar")
+def guardar_contacto(
+    request: Request,
+    id: Optional[int] = Form(None),
+    nombres: str = Form(...),
+    apellidos: str = Form(...),
+    categoria: str = Form("otro"),
+    direccion: Optional[str] = Form(None),
+    celular1: str = Form(...),  # Ahora es obligatorio
+    celular2: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    notas: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+
+    """Guardar contacto (crear o actualizar)"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    try:
+        print(f"\n{'='*60}")
+        print(f"{'📝 EDITANDO CONTACTO' if id else '➕ CREANDO NUEVO CONTACTO'}")
+        print(f"{'='*60}")
+        
+        # Validar datos obligatorios
+        if not nombres.strip() or not apellidos.strip():
+            raise ValueError("❌ ERROR: Nombres y apellidos son requeridos")
+        
+        # Validar categoría
+        categorias_validas = ['familia', 'amigos', 'trabajo', 'servicios', 'educacion', 'otro']
+        if categoria not in categorias_validas:
+            categoria = 'otro'
+        
+        # Validar email si se proporciona
+        email_clean = email.strip() if email else None
+        if email_clean and "@" not in email_clean:
+            email_clean = None
+        
+        # Preparar datos del contacto
+        contacto_data = {
+            "nombres": nombres.strip(),
+            "apellidos": apellidos.strip(),
+            "categoria": categoria,
+            "direccion": direccion.strip() if direccion else None,
+            "celular1": celular1.strip() if celular1 else None,
+            "celular2": celular2.strip() if celular2 else None,
+            "email": email_clean,
+            "notas": notas.strip() if notas else None
+        }
+        
+        if id:
+            # Actualizar contacto existente
+            contacto_update = schemas.ContactoUpdate(**contacto_data)
+            crud.actualizar_contacto(db, contacto_id=int(id), contacto=contacto_update, usuario_id=usuario_id)
+            mensaje = "Contacto actualizado correctamente"
+        else:
+            # Crear nuevo contacto
+            contacto_create = schemas.ContactoCreate(**contacto_data)
+            crud.crear_contacto(db, contacto=contacto_create, usuario_id=usuario_id)
+            mensaje = "Contacto creado correctamente"
+
+        request.session['mensaje'] = {
+            'tipo': 'exito',
+            'titulo': '¡Éxito!',
+            'texto': mensaje
+        }
+        
+    except Exception as e:
+        print(f"\n❌ ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        request.session['mensaje'] = {
+            'tipo': 'error',
+            'titulo': 'Error',
+            'texto': f'Ocurrió un error: {str(e)}'
+        }
+
+    return RedirectResponse(url="/contactos", status_code=303)
+
+@router.get("/contactos/eliminar/{contacto_id}")
+def eliminar_contacto(
+    request: Request,
+    contacto_id: int,
+    db: Session = Depends(get_db)
+):
+    """Eliminar un contacto"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    resultado = crud.eliminar_contacto(db, contacto_id, usuario_id)
+    
+    if resultado:
+        request.session["mensaje"] = {
+            "tipo": "exito",
+            "titulo": "¡Eliminado!",
+            "texto": "Contacto eliminado correctamente"
+        }
+    else:
+        request.session["mensaje"] = {
+            "tipo": "error",
+            "titulo": "Error",
+            "texto": "No se pudo eliminar el contacto"
+        }
+    
+    return RedirectResponse(url="/contactos", status_code=303)
+
+
+
+
+ # Ingresos Descargar Excel
+
+@router.get("/ingresos/descargar-excel")
+def descargar_ingresos_excel(
+    request: Request,
+    db: Session = Depends(get_db),
+    tipo: Optional[str] = None,
+    estado: Optional[str] = None
+):
+    """Descarga todos los ingresos en formato Excel"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    print(f"\n=== DESCARGANDO INGRESOS A EXCEL ===")
+    print(f"Usuario ID: {usuario_id}")
+    print(f"Filtros - tipo: '{tipo}', estado: '{estado}'")
+    
+    # Obtener TODOS los ingresos (sin paginación)
+    query = db.query(models.Ingreso).join(
+        models.Categoria, models.Ingreso.categoria_id == models.Categoria.id
+    ).filter(models.Ingreso.usuario_id == usuario_id)
+    
+    if tipo and tipo.strip():
+        query = query.filter(models.Categoria.tipo == tipo.strip())
+    
+    if estado in ['recibido', 'pendiente']:
+        query = query.filter(models.Ingreso.estado == estado)
+    
+    ingresos = query.order_by(models.Ingreso.fecha.desc()).all()
+    
+    # Crear workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Ingresos"
+    
+    # Estilos
+    header_fill = PatternFill(start_color="2563eb", end_color="2563eb", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Headers
+    headers = ["Nombre", "Valor", "Estado", "Fecha", "Categoría", "Tipo"]
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+    
+    # Datos
+    for row_num, ingreso in enumerate(ingresos, 2):
+        # Nombre (Notas)
+        cell = ws.cell(row=row_num, column=1)
+        cell.value = ingreso.notas or '-'
+        cell.border = border
+        
+        # Valor
+        cell = ws.cell(row=row_num, column=2)
+        cell.value = float(ingreso.valor)
+        cell.number_format = '$#,##0'
+        cell.border = border
+        
+        # Estado
+        cell = ws.cell(row=row_num, column=3)
+        cell.value = "Recibido" if ingreso.estado == 'recibido' else "Pendiente"
+        if ingreso.estado == 'recibido':
+            cell.fill = PatternFill(start_color="d1fae5", end_color="d1fae5", fill_type="solid")
+            cell.font = Font(color="065f46")
+        else:
+            cell.fill = PatternFill(start_color="fed7aa", end_color="fed7aa", fill_type="solid")
+            cell.font = Font(color="92400e")
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center")
+        
+        # Fecha
+        cell = ws.cell(row=row_num, column=4)
+        cell.value = ingreso.fecha.strftime('%d/%m/%Y') if ingreso.fecha else '-'
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center")
+        
+        # Categoría
+        cell = ws.cell(row=row_num, column=5)
+        cell.value = ingreso.categoria.nombre
+        cell.border = border
+        
+        # Tipo
+        cell = ws.cell(row=row_num, column=6)
+        cell.value = ingreso.categoria.tipo.capitalize()
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center")
+    
+    # Ajustar anchos de columna
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 12
+    ws.column_dimensions['E'].width = 20
+    ws.column_dimensions['F'].width = 12
+    
+    # Generar archivo en memoria
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    # Nombre del archivo
+    from datetime import datetime
+    fecha_actual = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"ingresos_{fecha_actual}.xlsx"
+    
+    print(f"✅ Excel generado: {len(ingresos)} registros")
+    
+    # Retornar archivo
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+# Gastos Descargar Excel
+@router.get("/gastos/descargar-excel")
+def descargar_gastos_excel(
+    request: Request,
+    db: Session = Depends(get_db),
+    tipo: Optional[str] = None,
+    estado: Optional[str] = None
+):
+    """Descarga todos los gastos en formato Excel"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+
+    print(f"\n=== DESCARGANDO GASTOS A EXCEL ===")
+    print(f"Usuario ID: {usuario_id}")
+    print(f"Filtros - tipo: '{tipo}', estado: '{estado}'")
+
+    # Query base
+    query = db.query(models.Gasto).join(
+        models.Categoria, models.Gasto.categoria_id == models.Categoria.id
+    ).filter(models.Gasto.usuario_id == usuario_id)
+
+    if tipo and tipo.strip():
+        query = query.filter(models.Categoria.tipo == tipo.strip())
+
+    if estado in ['pagado', 'pendiente']:
+        if estado == 'pagado':
+            query = query.filter(models.Gasto.pagado == True)
+        else:
+            query = query.filter(models.Gasto.pagado == False)
+
+    gastos = query.order_by(models.Gasto.fecha_limite.desc()).all()
+
+    # Crear workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Gastos"
+
+    # Estilos
+    header_fill = PatternFill(start_color="dc2626", end_color="dc2626", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=12)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    # Headers
+    headers = ["Nombre", "Valor", "Estado", "Fecha límite", "Categoría", "Tipo"]
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    # Datos
+    for row_num, gasto in enumerate(gastos, 2):
+        # Nombre
+        cell = ws.cell(row=row_num, column=1)
+        cell.value = gasto.notas or '-'
+        cell.border = border
+
+        # Valor
+        cell = ws.cell(row=row_num, column=2)
+        cell.value = float(gasto.valor)
+        cell.number_format = '$#,##0'
+        cell.border = border
+
+        # Estado
+        cell = ws.cell(row=row_num, column=3)
+        cell.value = "Pagado" if gasto.pagado else "Pendiente"
+        if gasto.pagado:
+            cell.fill = PatternFill(start_color="d1fae5", end_color="d1fae5", fill_type="solid")
+            cell.font = Font(color="065f46")
+        else:
+            cell.fill = PatternFill(start_color="fee2e2", end_color="fee2e2", fill_type="solid")
+            cell.font = Font(color="991b1b")
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center")
+
+        # Fecha límite
+        cell = ws.cell(row=row_num, column=4)
+        cell.value = gasto.fecha_limite.strftime('%d/%m/%Y') if gasto.fecha_limite else '-'
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center")
+
+        # Categoría
+        cell = ws.cell(row=row_num, column=5)
+        cell.value = gasto.categoria.nombre
+        cell.border = border
+
+        # Tipo
+        cell = ws.cell(row=row_num, column=6)
+        cell.value = gasto.categoria.tipo.capitalize()
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center")
+
+    # Ajustar columnas
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 20
+    ws.column_dimensions['F'].width = 12
+
+    # Generar archivo
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    from datetime import datetime
+    fecha_actual = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"gastos_{fecha_actual}.xlsx"
+
+    print(f"✅ Excel generado: {len(gastos)} registros")
+
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
