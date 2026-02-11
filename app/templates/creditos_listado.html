@@ -57,7 +57,7 @@
     <i class="bi bi-arrow-left-right"></i> Desliza para ver más
   </div>
 
-  <!-- Tabla -->
+  <!-- Tabla SIMPLIFICADA - Solo columnas importantes -->
   <div class="tabla-wrapper">
     <div class="tabla-scroll">
       <table class="tabla-creditos">
@@ -65,14 +65,10 @@
           <tr>
             <th class="sticky-col">Crédito</th>
             <th>Monto</th>
-            <th>Cuota Crédito</th>
-            <th>Seguro</th>
             <th>Cuota Total</th>
             <th>Saldo</th>
             <th>Estado</th>
-            <th>Frecuencia</th>
             <th>Fecha Inicio</th>
-            <th>Plazo</th>
             <th class="sticky-actions">Acciones</th>
           </tr>
         </thead>
@@ -88,39 +84,23 @@
               ${{ "{:,.0f}".format(credito.monto) }}
             </td>
 
-            <!-- ✅ COLUMNA CUOTA CRÉDITO CORREGIDA -->
-            <td class="cuota-cell">
-              ${{ "{:,.0f}".format(credito.cuota) }}
-              
-              {% if credito.cuota_manual and credito.cuota_manual > 0 %}
-                  <br>
-                  <small class="text-muted" style="font-size: 0.8em;">
-                      <i class="bi bi-bank"></i> Modo banco
-                      {% if credito.diferencia != 0.0 %}
-                          <br>
-                          <span title="Diferencia con cálculo automático">
-                              (∆ ${{ "{:,.0f}".format(credito.diferencia) }})
-                          </span>
-                      {% endif %}
-                  </small>
-              {% endif %}
-            </td>
-
-            <td class="seguro-cell">
-              {% if credito.seguro > 0 %}
-                ${{ "{:,.0f}".format(credito.seguro) }}
-              {% else %}
-                <span class="no-seguro">Sin seguro</span>
-              {% endif %}
-            </td>
-
-            <!-- ✅ COLUMNA CUOTA TOTAL (CUOTA + SEGURO) -->
+            <!-- CUOTA TOTAL (CUOTA + SEGURO) -->
             <td class="cuota-total-cell">
-              ${{ "{:,.0f}".format(credito.cuota + credito.seguro) }}
+              <strong>${{ "{:,.0f}".format(credito.cuota + credito.seguro) }}</strong>
+              {% if credito.cuota_manual and credito.cuota_manual > 0 %}
+                <br><small class="text-muted"><i class="bi bi-bank"></i> Modo banco</small>
+              {% endif %}
             </td>
 
             <td class="saldo-cell">
-              ${{ "{:,.0f}".format(credito.saldo_actual) }}
+              <div class="saldo-info">
+                <span class="saldo-monto">${{ "{:,.0f}".format(credito.saldo_actual) }}</span>
+                {% if credito.monto > 0 %}
+                  <small class="saldo-progreso">
+                    {{ ((credito.monto - credito.saldo_actual) / credito.monto * 100)|round(1) }}% pagado
+                  </small>
+                {% endif %}
+              </div>
             </td>
 
             <td>
@@ -139,22 +119,16 @@
               {% endif %}
             </td>
 
-            <td>
-              <span class="badge-frecuencia {{ credito.frecuencia_pago }}">
-                {{ credito.frecuencia_pago }}
-              </span>
-            </td>
-
             <td class="fecha-cell">
               {{ credito.fecha_inicio.strftime('%d/%m/%y') if credito.fecha_inicio else '-' }}
             </td>
 
-            <td class="plazo-cell">
-              {{ credito.plazo_meses }} meses
-            </td>
-
             <td class="sticky-actions acciones-cell">
               <div class="acciones">
+                <!-- BOTÓN VER DETALLE -->
+                <a href="/creditos/detalle/{{ credito.id }}" class="btn-icon view" title="Ver detalle">
+                  <i class="bi bi-eye-fill"></i>
+                </a>
                 <a href="/creditos/editar/{{ credito.id }}" class="btn-icon edit" title="Editar">
                   <i class="bi bi-pencil-fill"></i>
                 </a>
@@ -170,7 +144,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="11" class="no-data">
+            <td colspan="7" class="no-data">
               <i class="bi bi-inbox"></i> No hay créditos registrados
             </td>
           </tr>

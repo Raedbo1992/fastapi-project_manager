@@ -49,13 +49,12 @@
 
     </form>
 
-     <!-- Botón descargar Excel -->
-  <a href="/gastos/descargar-excel?tipo={{ filtro_tipo or '' }}&estado={{ filtro_estado or '' }}"
-     class="btn-excel"
-     title="Descargar Excel">
-    <i class="bi bi-file-earmark-excel"></i> Descargar
-  </a>
-  
+    <!-- Botón descargar Excel -->
+    <a href="/gastos/descargar-excel?tipo={{ filtro_tipo or '' }}&estado={{ filtro_estado or '' }}"
+       class="btn-excel"
+       title="Descargar Excel">
+      <i class="bi bi-file-earmark-excel"></i> Descargar
+    </a>
   </div>
 
   <!-- Hint de scroll -->
@@ -69,75 +68,97 @@
       <table class="tabla-gastos">
         <thead>
           <tr>
-            <th class="sticky-col">Nombre</th>
-            <th>Valor</th>
-            <th>Estado</th>
-            <th>Fecha Límite</th>
-            <th>Categoría</th>
-            <th>Tipo</th>
-            <th class="sticky-actions">Acciones</th>
+            <th class="sticky-col col-nombre">Nombre</th>
+            <th class="col-valor">Valor</th>
+            <th class="col-estado">Estado</th>
+            <th class="col-fecha">Fecha Lím.</th>
+            <th class="col-categoria">Categoría</th>
+            <th class="col-tipo">Tipo</th>
+            <th class="sticky-actions acciones-header">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% for gasto in gastos %}
           <tr class="{% if gasto.pagado %}pagado{% else %}pendiente{% endif %}">
             
-            <td class="notas-cell">
-              {{ gasto.notas or '-' }}
+            <!-- Columna NOMBRE/NOTAS -->
+            <td class="sticky-col col-nombre">
+              <div class="notas-compacto"
+                   onclick="openTextModal('Notas del Gasto', '{{ gasto.notas or "Sin notas" }}')"
+                   title="Ver notas completas">
+                {{ gasto.notas|default("-", true)|truncate(15) }}
+              </div>
             </td>
 
-            <td class="valor-cell">
-              ${{ "{:,.0f}".format(gasto.valor) }}
+            <!-- Columna VALOR -->
+            <td class="valor-cell col-valor">
+              <div class="valor-compacto"
+                   onclick="openTextModal('Valor del Gasto', '${{ "{:,.0f}".format(gasto.valor) }}')"
+                   title="Ver valor completo">
+                ${{ "{:,.0f}".format(gasto.valor)|truncate(10) }}
+              </div>
             </td>
 
-            <td>
+            <!-- Columna ESTADO -->
+            <td class="col-estado">
               {% if gasto.pagado %}
-                <span class="estado-badge pagado">
+                <span class="estado-badge pagado" 
+                      onclick="openTextModal('Estado del Gasto', 'Pagado')"
+                      title="Ver estado completo">
                   <i class="bi bi-check-circle-fill"></i> Pagado
                 </span>
               {% else %}
-                <span class="estado-badge pendiente">
+                <span class="estado-badge pendiente"
+                      onclick="openTextModal('Estado del Gasto', 'Pendiente')"
+                      title="Ver estado completo">
                   <i class="bi bi-clock-fill"></i> Pendiente
                 </span>
               {% endif %}
             </td>
 
-            <td class="fecha-cell">
-              {{ gasto.fecha_limite.strftime('%d/%m/%y') if gasto.fecha_limite else '-' }}
+            <!-- Columna FECHA LÍMITE -->
+            <td class="fecha-cell col-fecha">
+              <div class="fecha-compacto"
+                   onclick="openTextModal('Fecha Límite', '{{ gasto.fecha_limite.strftime('%d/%m/%Y') if gasto.fecha_limite else "Sin fecha límite" }}')"
+                   title="Ver fecha completa">
+                {{ gasto.fecha_limite.strftime('%d/%m/%y') if gasto.fecha_limite else '-' }}
+              </div>
             </td>
           
-            <td class="sticky-col categoria-cell">
-              {{ gasto.categoria.nombre }}
+            <!-- Columna CATEGORÍA -->
+            <td class="categoria-cell col-categoria">
+              <div class="categoria-compacta"
+                   onclick="openTextModal('Categoría', '{{ gasto.categoria.nombre }}')"
+                   title="Ver categoría completa">
+                {{ gasto.categoria.nombre|truncate(12) }}
+              </div>
             </td>
 
-            <td>
-              <span class="badge-tipo {{ gasto.categoria.tipo }}">
-                {{ gasto.categoria.tipo }}
-              </span>
+            <!-- Columna TIPO -->
+            <td class="col-tipo">
+              <div class="tipo-compacto"
+                   onclick="openTextModal('Tipo de Gasto', '{{ gasto.categoria.tipo }}')"
+                   title="Ver tipo completo">
+                <span class="badge-tipo {{ gasto.categoria.tipo }}">
+                  {{ gasto.categoria.tipo|truncate(8) }}
+                </span>
+              </div>
             </td>
 
-
-
- 
-
-
-
+            <!-- Columna ACCIONES -->
             <td class="sticky-actions acciones-cell">
-              <div class="acciones">
-                <a href="/gastos/editar/{{ gasto.id }}" class="btn-icon edit" title="Editar">
-                  <i class="bi bi-pencil-fill"></i>
+              <div class="acciones-compactas">
+                <a href="/gastos/editar/{{ gasto.id }}" class="btn-icon-edit" title="Editar">
+                  <i class="bi bi-pencil"></i>
                 </a>
                 <a href="/gastos/eliminar/{{ gasto.id }}" 
-                   class="btn-icon delete eliminar-btn" 
+                   class="btn-icon-delete eliminar-btn" 
                    data-id="{{ gasto.id }}"
                    title="Eliminar">
                   <i class="bi bi-trash"></i>
                 </a>
               </div>
             </td>
-
-
-            
           </tr>
           {% else %}
           <tr>
@@ -148,6 +169,37 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Modal para texto completo -->
+  <div id="text-modal" class="text-modal">
+    <div class="text-modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button onclick="closeTextModal()" class="modal-close">
+          &times;
+        </button>
+      </div>
+      
+      <div id="modal-content" class="modal-text-display"></div>
+      
+      <div class="modal-actions">
+        <button onclick="copyFromModal()" class="btn-modal-copy">
+          <i class="bi bi-copy"></i> Copiar
+        </button>
+        <button onclick="closeTextModal()" class="btn-modal-close">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div id="copy-toast" class="copy-toast">
+    <div class="toast-content">
+      <i class="bi bi-check-circle-fill"></i>
+      <span id="toast-text"></span>
     </div>
   </div>
 
@@ -240,6 +292,73 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }, 4000);
   }
+
+  // Función para copiar texto
+  window.copiarAlPortapapeles = function(texto, tipo, elemento) {
+    if (!texto || texto === '-' || texto === '••••••••') return;
+    
+    navigator.clipboard.writeText(texto).then(() => {
+      const toast = document.getElementById('copy-toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = `${tipo} copiado`;
+      toast.classList.add('show');
+      
+      if (elemento) {
+        elemento.classList.add('copied');
+        setTimeout(() => elemento.classList.remove('copied'), 1000);
+      }
+      
+      setTimeout(() => toast.classList.remove('show'), 2000);
+      
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo copiar al portapapeles',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
+    });
+  };
+  
+  // Abrir modal para texto completo
+  window.openTextModal = function(titulo, contenido) {
+    const modal = document.getElementById('text-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    
+    modalTitle.textContent = titulo;
+    modalContent.textContent = contenido;
+    
+    modal.style.display = 'flex';
+  };
+  
+  // Cerrar modal
+  window.closeTextModal = function() {
+    document.getElementById('text-modal').style.display = 'none';
+  };
+  
+  // Copiar del modal
+  window.copyFromModal = function() {
+    const content = document.getElementById('modal-content');
+    const text = content.textContent || content.innerText;
+    const titulo = document.getElementById('modal-title').textContent;
+    copiarAlPortapapeles(text, titulo, null);
+  };
+  
+  // Cerrar modal con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeTextModal();
+    }
+  });
+  
+  // Cerrar modal al hacer clic fuera
+  document.getElementById('text-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTextModal();
+    }
+  });
 });
 </script>
 {% endblock %}

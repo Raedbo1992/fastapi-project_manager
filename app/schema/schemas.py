@@ -244,6 +244,35 @@ class CreditoUpdate(BaseModel):
 
 
 
+# ============================================================================
+# 💰 SCHEMAS PARA PAGOS - AGREGAR EN schemas.py
+# ============================================================================
+
+class PagoBase(BaseModel):
+    credito_id: int
+    monto: float
+    fecha_pago: date
+    comprobante: str
+    notas: Optional[str] = None
+
+class PagoCreate(PagoBase):
+    pass
+
+class PagoUpdate(BaseModel):
+    monto: Optional[float] = None
+    fecha_pago: Optional[date] = None
+    comprobante: Optional[str] = None
+    notas: Optional[str] = None
+
+class Pago(PagoBase):
+    id: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+        
+
 # ----------------------------------------
 # 📌 Schemas para CContactoss
 # ----------------------------------------

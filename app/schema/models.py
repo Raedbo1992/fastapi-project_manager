@@ -70,6 +70,7 @@ class Credito(Base):
     
     # ✅ RELACIÓN CORREGIDA
     usuario = relationship("Usuario", back_populates="creditos")
+    pagos = relationship("Pago", back_populates="credito", cascade="all, delete-orphan")
     
     # Propiedades calculadas
     @property
@@ -91,6 +92,28 @@ class Credito(Base):
             diferencia = self.cuota - self.cuota_calculada
             return diferencia
         return 0.0
+
+
+# ============================================================================
+# 💰 MODELO PAGO - AGREGAR EN models.py
+# ============================================================================
+class Pago(Base):
+    """Modelo para pagos de créditos"""
+    __tablename__ = "pagos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    credito_id = Column(Integer, ForeignKey("creditos.id", ondelete="CASCADE"), nullable=False)
+    monto = Column(DECIMAL(12, 2), nullable=False)  # Usa DECIMAL para montos grandes
+    fecha_pago = Column(Date, nullable=False)
+    comprobante = Column(String(100), nullable=False)
+    notas = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relación con Crédito (AGREGA ESTO EN LA CLASE Credito también)
+    credito = relationship("Credito", back_populates="pagos")
+    
+    def __repr__(self):
+        return f"<Pago {self.id} - ${self.monto:,.2f} - {self.fecha_pago}>"
 
 
 # ----------------------------------------

@@ -1,0 +1,319 @@
+{% extends "base_layout.html" %}
+
+{% block title %}💰 Registrar Pago{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='style_pago_form.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="header-navigation">
+        <a href="/creditos/detalle/{{ credito.id }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Volver al Crédito
+        </a>
+        <h2 class="page-title">
+            <i class="bi bi-cash-stack"></i>
+            Registrar Pago
+        </h2>
+    </div>
+
+    <!-- Tarjeta de resumen del crédito -->
+    <div class="info-card resumen-credito">
+        <div class="card-header" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);">
+            <h3><i class="bi bi-credit-card"></i> {{ credito.nombre_credito }}</h3>
+            <span class="badge-estado {{ credito.estado }}">
+                {% if credito.estado == 'activo' %}Activo
+                {% elif credito.estado == 'pagado' %}Pagado
+                {% elif credito.estado == 'en_mora' %}En Mora
+                {% endif %}
+            </span>
+        </div>
+        <div class="info-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="info-item">
+                <label><i class="bi bi-cash"></i> Monto total</label>
+                <span class="info-value">${{ "{:,.0f}".format(credito.monto) }}</span>
+            </div>
+            <div class="info-item">
+                <label><i class="bi bi-check-circle"></i> Total pagado</label>
+                <span class="info-value" style="color: var(--success);">${{ "{:,.0f}".format(total_pagado) if total_pagado else '0' }}</span>
+            </div>
+            <div class="info-item highlight">
+                <label><i class="bi bi-exclamation-circle"></i> Saldo actual</label>
+                <span class="info-value amount-large">${{ "{:,.0f}".format(credito.saldo_actual) }}</span>
+            </div>
+        </div>
+    </div>
+
+                <!-- Formulario de pago -->
+                <div class="form-container">
+                    <form method="post" action="/pagos/guardar" class="pago-form">
+                        <input type="hidden" name="credito_id" value="{{ credito.id }}">
+                        
+                        <!-- CAMBIA ESTA SECCIÓN EN pago_form.html -->
+                    <div class="form-group">
+                <label for="monto">
+                    <i class="bi bi-cash"></i> Monto del Pago
+                </label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">$</span>
+                    <input 
+                        type="text"           
+                        id="monto" 
+                        name="monto" 
+                        inputmode="numeric"  
+                        pattern="[0-9]+"    
+                        placeholder="0"
+                        value="{{ "{:,.0f}".format(credito.cuota + credito.seguro) }}"
+                        required
+                        autofocus
+                    >
+                </div>
+                <small class="form-hint">
+                    <i class="bi bi-info-circle"></i> 
+                    Monto sugerido: ${{ "{:,.0f}".format(credito.cuota + credito.seguro) }}
+                    | Máximo: ${{ "{:,.0f}".format(credito.saldo_actual) }}
+                </small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fecha_pago">
+                        <i class="bi bi-calendar"></i> Fecha del Pago
+                    </label>
+                    <input 
+                        type="date" 
+                        id="fecha_pago" 
+                        name="fecha_pago" 
+                        value="{{ hoy }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="comprobante">
+                        <i class="bi bi-receipt"></i> Número de Comprobante
+                    </label>
+                    <input 
+                        type="text" 
+                        id="comprobante" 
+                        name="comprobante" 
+                        placeholder="Ej: COMP-2024001"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notas">
+                    <i class="bi bi-chat-text"></i> Notas (opcional)
+                </label>
+                <textarea 
+                    id="notas" 
+                    name="notas" 
+                    rows="3"
+                    placeholder="Información adicional del pago..."
+                ></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-guardar">
+                    <i class="bi bi-save"></i> Registrar Pago
+                </button>
+                <a href="/creditos/detalle/{{ credito.id }}" class="btn-cancelar">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+        </form>
+
+
+        <!-- AGREGAR ESTO DESPUÉS DEL FORM-ACTIONS -->
+            {% if mensaje %}
+            <script>
+                Swal.fire({
+                    title: '{{ mensaje.titulo }}',
+                    text: '{{ mensaje.texto }}',
+                    icon: '{{ mensaje.tipo }}',
+                    confirmButtonColor: '#2563eb'
+                });
+            </script>
+            {% endif %}
+
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const montoInput = document.getElementById('monto');
+    const maxMonto = {{ credito.saldo_actual }};
+    
+    montoInput.addEventListener('input', function() {
+        let valor = parseFloat(this.value) || 0;
+        if (valor > maxMonto) {
+            this.value = maxMonto;
+            Swal.fire({
+                title: 'Monto excede el saldo',
+                text: `El pago máximo es $${maxMonto.toLocaleString()}`,
+                icon: 'warning',
+                confirmButtonColor: '#2563eb',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    });
+
+    // Botones rápidos de montos (opcional)
+    const addQuickButtons = () => {
+        const wrapper = document.querySelector('.input-wrapper');
+        if (wrapper && maxMonto > 0) {
+            const quickButtons = document.createElement('div');
+            quickButtons.className = 'quick-buttons';
+            quickButtons.innerHTML = `
+                <button type="button" class="quick-btn" data-value="${Math.min(100000, maxMonto)}">$100k</button>
+                <button type="button" class="quick-btn" data-value="${Math.min(500000, maxMonto)}">$500k</button>
+                <button type="button" class="quick-btn" data-value="${Math.min(1000000, maxMonto)}">$1M</button>
+                <button type="button" class="quick-btn" data-value="${maxMonto}">Máximo</button>
+            `;
+            wrapper.parentNode.appendChild(quickButtons);
+            
+            quickButtons.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    montoInput.value = this.dataset.value;
+                    montoInput.dispatchEvent(new Event('input'));
+                });
+            });
+        }
+    };
+    
+    addQuickButtons();
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const montoInput = document.getElementById('monto');
+    const maxMonto = {{ credito.saldo_actual }};
+    
+    // ✅ 1. PERMITIR SOLO NÚMEROS - SIN PUNTOS, SIN COMAS
+    montoInput.addEventListener('input', function(e) {
+        // Eliminar cualquier carácter que no sea número
+        this.value = this.value.replace(/[^0-9]/g, '');
+        
+        // Limitar longitud a 10 dígitos
+        if (this.value.length > 10) {
+            this.value = this.value.slice(0, 10);
+        }
+    });
+    
+    // ✅ 2. VALIDAR AL SALIR DEL CAMPO
+    montoInput.addEventListener('blur', function() {
+        let valor = parseInt(this.value) || 0;
+        
+        // Validar mínimo
+        if (valor < 1) {
+            this.value = 1000;  // Valor mínimo sugerido
+            valor = 1000;
+            Swal.fire({
+                title: 'Monto mínimo',
+                text: 'El monto mínimo sugerido es $1,000',
+                icon: 'info',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+        
+        // Validar máximo
+        if (valor > maxMonto) {
+            this.value = maxMonto;
+            valor = maxMonto;
+            Swal.fire({
+                title: 'Monto ajustado',
+                text: `El pago máximo es $${maxMonto.toLocaleString()}`,
+                icon: 'warning',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+        
+        // Actualizar el campo con el número limpio (sin formato)
+        this.value = valor;
+    });
+    
+    // ✅ 3. BOTONES RÁPIDOS - ENVIAR NÚMEROS LIMPIOS
+    const addQuickButtons = () => {
+        const wrapper = document.querySelector('.input-wrapper');
+        if (!wrapper || !maxMonto) return;
+        
+        // No duplicar
+        if (document.querySelector('.quick-buttons')) return;
+        
+        const quickButtons = document.createElement('div');
+        quickButtons.className = 'quick-buttons';
+        
+        const valores = [
+            { label: '$100k', value: 100000 },
+            { label: '$500k', value: 500000 },
+            { label: '$1M', value: 1000000 },
+            { label: 'Cuota', value: {{ credito.cuota + credito.seguro }} },
+            { label: 'Máximo', value: maxMonto }
+        ];
+        
+        let html = '';
+        valores.forEach(v => {
+            if (v.value <= maxMonto) {
+                html += `<button type="button" class="quick-btn" data-value="${v.value}">${v.label}</button>`;
+            }
+        });
+        
+        quickButtons.innerHTML = html;
+        wrapper.parentNode.appendChild(quickButtons);
+        
+        quickButtons.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                montoInput.value = this.dataset.value;
+                montoInput.dispatchEvent(new Event('blur'));
+            });
+        });
+    };
+    
+    addQuickButtons();
+    
+    // ✅ 4. VALIDAR FORMULARIO ANTES DE ENVIAR
+    const form = document.querySelector('.pago-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const monto = parseInt(montoInput.value) || 0;
+            
+            if (monto < 1000) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Monto inválido',
+                    text: 'El monto mínimo es $1,000',
+                    icon: 'error',
+                    confirmButtonColor: '#2563eb'
+                });
+                return;
+            }
+            
+            if (monto > maxMonto) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Monto excede el saldo',
+                    text: `El máximo permitido es $${maxMonto.toLocaleString()}`,
+                    icon: 'error',
+                    confirmButtonColor: '#2563eb'
+                });
+                return;
+            }
+            
+            // ✅ El valor se envía como número entero (ej: 8500000)
+            console.log('Enviando monto:', monto);
+        });
+    }
+});
+</script>
+
+{% endblock %}

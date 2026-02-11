@@ -1829,6 +1829,70 @@ def eliminar_credito(
     
     return RedirectResponse(url="/creditos", status_code=303)
 
+# ============================================================================
+# 🔍 DETALLE DEL CRÉDITO (VERSIÓN MEJORADA)
+# ============================================================================
+
+# ============================================================================
+# 🔍 DETALLE DEL CRÉDITO (VERSIÓN CORREGIDA)
+# ============================================================================
+
+@router.get("/creditos/detalle/{credito_id}")
+def detalle_credito(
+    request: Request,
+    credito_id: int,
+    db: Session = Depends(get_db)
+):
+    """Ver detalle completo de un crédito con su historial de pagos"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    # Obtener el crédito
+    credito = crud.obtener_credito(db, credito_id)
+    if not credito or credito.usuario_id != usuario_id:
+        # ✅ CORREGIDO: Diccionario completo, no {...}
+        request.session['mensaje'] = {
+            'tipo': 'error',
+            'titulo': 'Error',
+            'texto': 'Crédito no encontrado'
+        }
+        return RedirectResponse(url="/creditos", status_code=303)
+    
+    # Obtener pagos del crédito
+    pagos = crud.obtener_pagos_por_credito(db, credito_id)
+    
+    # Calcular total pagado
+    total_pagado = sum(float(pago.monto) for pago in pagos) if pagos else 0
+    
+    # Calcular progreso
+    progreso = (total_pagado / credito.monto * 100) if credito.monto > 0 else 0
+    
+    # Calcular cuota total
+    cuota_total = credito.cuota + credito.seguro
+    
+    print(f"\n=== DETALLE CRÉDITO ID: {credito_id} ===")
+    print(f"Usuario: {usuario_id}")
+    print(f"Crédito: {credito.nombre_credito}")
+    print(f"Monto: ${credito.monto:,.0f}")
+    print(f"Pagos encontrados: {len(pagos)}")
+    print(f"Total pagado: ${total_pagado:,.0f}")
+    print(f"Progreso: {progreso:.1f}%")
+    
+    return templates.TemplateResponse(
+        "credito_detalle.html",
+        {
+            "request": request,
+            "credito": credito,
+            "pagos": pagos,
+            "total_pagado": total_pagado,
+            "progreso": round(progreso, 1),
+            "cuota_total": cuota_total,
+            "mensaje": request.session.pop("mensaje", None)  # ✅ Agregar mensajes de sesión
+        }
+    )
+
+
 # Agregar al archivo routes.py después de las rutas de cumpleaños
 
 # ============================================================================
@@ -1870,6 +1934,8 @@ def listar_contactos(
             "mensaje": mensaje
         }
     )
+
+
 
 @router.get("/contactos/nuevo", response_class=HTMLResponse)
 @router.get("/contactos/editar/{contacto_id}", response_class=HTMLResponse)
@@ -2258,3 +2324,185 @@ def descargar_gastos_excel(
     )
 
 
+
+
+# ============================================================================
+# 💰 RUTAS DE PAGOS - AGREGAR EN routes.py
+# ============================================================================
+
+@router.get("/pagos/nuevo/{credito_id}", response_class=HTMLResponse)
+def formulario_nuevo_pago(
+    request: Request,
+    credito_id: int,
+    db: Session = Depends(get_db)
+):
+    """Mostrar formulario para crear nuevo pago"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    # Verificar que el crédito existe y pertenece al usuario
+    credito = crud.obtener_credito(db, credito_id)
+    if not credito or credito.usuario_id != usuario_id:
+        raise HTTPException(status_code=404, detail="Crédito no encontrado")
+    
+    # ✅ CALCULAR TOTAL PAGADO PARA MOSTRAR EN EL RESUMEN
+    pagos = crud.obtener_pagos_por_credito(db, credito_id)
+    total_pagado = sum(float(pago.monto) for pago in pagos) if pagos else 0
+    
+    # Fecha actual para el formulario
+    hoy = date.today().isoformat()
+    
+    return templates.TemplateResponse("pago_form.html", {
+        "request": request,
+        "credito": credito,
+        "total_pagado": total_pagado,  # ✅ ESTO FALTABA
+        "hoy": hoy
+    })
+
+
+
+@router.post("/pagos/guardar")
+def guardar_pago(
+    request: Request,
+    credito_id: int = Form(...),
+    monto: str = Form(...),
+    fecha_pago: str = Form(...),
+    comprobante: str = Form(...),
+    notas: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    """Guardar un nuevo pago"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    try:
+        print(f"\n{'='*60}")
+        print(f"💰 PROCESANDO PAGO")
+        print(f"{'='*60}")
+        print(f"  Crédito ID: {credito_id}")
+        print(f"  Monto recibido (string): '{monto}'")
+        print(f"  Fecha: {fecha_pago}")
+        print(f"  Comprobante: {comprobante}")
+        
+        # ✅ 1. LIMPIAR EL MONTO - ELIMINAR TODO LO QUE NO SEA NÚMERO
+        monto_limpio = ''.join(c for c in monto if c.isdigit())
+        
+        if not monto_limpio:
+            raise ValueError("El monto no contiene números válidos")
+        
+        # ✅ 2. CONVERTIR A FLOAT (SIN DIVIDIR ENTRE 100)
+        monto_float = float(monto_limpio)
+        print(f"  Monto limpiado: '{monto_limpio}' -> {monto_float:,.2f}")
+        
+        # ✅ 3. VALIDAR QUE EL CRÉDITO EXISTE
+        credito = crud.obtener_credito(db, credito_id)
+        if not credito or credito.usuario_id != usuario_id:
+            raise HTTPException(status_code=404, detail="Crédito no encontrado")
+        
+        print(f"  Saldo actual: ${credito.saldo_actual:,.2f}")
+        
+        # ✅ 4. VALIDAR QUE EL MONTO NO EXCEDA EL SALDO
+        if monto_float > credito.saldo_actual:
+            raise ValueError(
+                f"El monto del pago (${monto_float:,.0f}) "
+                f"excede el saldo actual (${credito.saldo_actual:,.0f})"
+            )
+        
+        # ✅ 5. CONVERTIR FECHA
+        try:
+            fecha_pago_dt = date.fromisoformat(fecha_pago)
+        except ValueError:
+            raise ValueError(f"Formato de fecha inválido: {fecha_pago}")
+        
+        # ✅ 6. CREAR EL PAGO
+        pago_data = schemas.PagoCreate(
+            credito_id=credito_id,
+            monto=monto_float,
+            fecha_pago=fecha_pago_dt,
+            comprobante=comprobante.strip(),
+            notas=notas.strip() if notas else None
+        )
+        
+        pago = crud.crear_pago(db, pago_data, usuario_id)
+        
+        if pago:
+            mensaje = f'✅ Pago de ${monto_float:,.0f} registrado correctamente'
+            print(mensaje)
+            request.session['mensaje'] = {
+                'tipo': 'success',
+                'titulo': '¡Éxito!',
+                'texto': mensaje
+            }
+        else:
+            raise Exception("No se pudo crear el pago en la base de datos")
+        
+    except ValueError as e:
+        print(f"❌ Error de validación: {e}")
+        request.session['mensaje'] = {
+            'tipo': 'error',
+            'titulo': 'Error de validación',
+            'texto': str(e)
+        }
+    except HTTPException as e:
+        print(f"❌ HTTP Exception: {e.detail}")
+        request.session['mensaje'] = {
+            'tipo': 'error',
+            'titulo': 'Error',
+            'texto': e.detail
+        }
+    except Exception as e:
+        print(f"❌ Error inesperado: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        request.session['mensaje'] = {
+            'tipo': 'error',
+            'titulo': 'Error del servidor',
+            'texto': f'Error al registrar pago: {str(e)[:100]}'
+        }
+    
+    return RedirectResponse(url=f"/creditos/detalle/{credito_id}", status_code=303)
+
+
+
+@router.get("/pagos/eliminar/{pago_id}")
+def eliminar_pago_route(
+    request: Request,
+    pago_id: int,
+    credito_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """Eliminar un pago"""
+    usuario_id = request.session.get("usuario_id")
+    if not usuario_id:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    resultado = crud.eliminar_pago(db, pago_id, usuario_id)
+    
+    if resultado:
+        request.session["mensaje"] = {
+            "tipo": "success",  # ✅ Cambiado de 'exito' a 'success' para SweetAlert
+            "titulo": "¡Eliminado!",
+            "texto": "Pago eliminado correctamente"
+        }
+        print(f"✅ Pago {pago_id} eliminado correctamente")
+    else:
+        request.session["mensaje"] = {
+            "tipo": "error",
+            "titulo": "Error",
+            "texto": "No se pudo eliminar el pago"
+        }
+        print(f"❌ Error al eliminar pago {pago_id}")
+    
+    # Redirigir al detalle del crédito
+    if credito_id:
+        return RedirectResponse(url=f"/creditos/detalle/{credito_id}", status_code=303)
+    else:
+        # Si no viene credito_id, obtenerlo del pago
+        pago = db.query(models.Pago).filter(models.Pago.id == pago_id).first()
+        if pago:
+            return RedirectResponse(url=f"/creditos/detalle/{pago.credito_id}", status_code=303)
+        else:
+            return RedirectResponse(url="/creditos", status_code=303)

@@ -49,16 +49,13 @@
 
   </form>
 
-  <!-- Botón de descarga Excel - AHORA A LA IZQUIERDA -->
+  <!-- Botón de descarga Excel -->
   <a href="/ingresos/descargar-excel?tipo={{ filtro_tipo or '' }}&estado={{ filtro_estado or '' }}" 
      class="btn-excel" 
      title="Descargar Excel">
     <i class="bi bi-file-earmark-excel"></i> Descargar
   </a>
 </div>
-
-
-
 
   <!-- Hint de scroll -->
   <div class="scroll-hint">
@@ -71,13 +68,12 @@
       <table class="tabla-ingresos">
         <thead>
           <tr>
-            <th class="sticky-col">Nombre</th>
-            <th>Valor</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-            <th>Categoría</th>
-            <th>Tipo</th>
-            <!-- Columna ACCIONES más pequeña -->
+            <th class="sticky-col col-nombre">Nombre</th>
+            <th class="col-valor">Valor</th>
+            <th class="col-estado">Estado</th>
+            <th class="col-fecha">Fecha</th>
+            <th class="col-categoria">Categoría</th>
+            <th class="col-tipo">Tipo</th>
             <th class="sticky-actions acciones-header">Acciones</th>
           </tr>
         </thead>
@@ -85,44 +81,67 @@
           {% for ingreso in ingresos %}
           <tr class="{% if ingreso.estado == 'recibido' %}recibido{% else %}pendiente{% endif %}">
             
-
-            <td class="notas-cell">
-              {{ ingreso.notas or '-' }}
+            <!-- Columna NOMBRE/NOTAS -->
+            <td class="sticky-col col-nombre">
+              <div class="notas-compacto"
+                   onclick="openTextModal('Notas', '{{ ingreso.notas or "Sin notas" }}')"
+                   title="Ver notas completas">
+                {{ ingreso.notas|default("-", true)|truncate(15) }}
+              </div>
             </td>
 
-            <td class="valor-cell">
-              ${{ "{:,.0f}".format(ingreso.valor) }}
+            <!-- Columna VALOR -->
+            <td class="valor-cell col-valor">
+              <div class="valor-compacto"
+                   onclick="openTextModal('Valor del Ingreso', '${{ "{:,.0f}".format(ingreso.valor) }}')"
+                   title="Ver valor completo">
+                ${{ "{:,.0f}".format(ingreso.valor)|truncate(10) }}
+              </div>
             </td>
 
-            <td>
+            <!-- Columna ESTADO -->
+            <td class="col-estado">
               {% if ingreso.estado == 'recibido' %}
-                <span class="estado-badge recibido">
+                <span class="estado-badge recibido" title="Ingreso recibido">
                   <i class="bi bi-check-circle-fill"></i> Recibido
                 </span>
               {% else %}
-                <span class="estado-badge pendiente">
+                <span class="estado-badge pendiente" title="Ingreso pendiente">
                   <i class="bi bi-clock-fill"></i> Pendiente
                 </span>
               {% endif %}
             </td>
 
-            <td class="fecha-cell">
-              {{ ingreso.fecha.strftime('%d/%m/%y') if ingreso.fecha else '-' }}
+            <!-- Columna FECHA -->
+            <td class="fecha-cell col-fecha">
+              <div class="fecha-compacto"
+                   onclick="openTextModal('Fecha del Ingreso', '{{ ingreso.fecha.strftime('%d/%m/%Y') if ingreso.fecha else "Sin fecha" }}')"
+                   title="Ver fecha completa">
+                {{ ingreso.fecha.strftime('%d/%m/%y') if ingreso.fecha else '-' }}
+              </div>
             </td>
 
-            <td class="sticky-col categoria-cell">
-              {{ ingreso.categoria.nombre }}
+            <!-- Columna CATEGORÍA -->
+            <td class="categoria-cell col-categoria">
+              <div class="categoria-compacta"
+                   onclick="openTextModal('Categoría', '{{ ingreso.categoria.nombre }}')"
+                   title="Ver categoría completa">
+                {{ ingreso.categoria.nombre|truncate(12) }}
+              </div>
             </td>
 
-
-            <td>
-              <span class="badge-tipo {{ ingreso.categoria.tipo }}">
-                {{ ingreso.categoria.tipo }}
-              </span>
+            <!-- Columna TIPO -->
+            <td class="col-tipo">
+              <div class="tipo-compacto"
+                   onclick="openTextModal('Tipo de Ingreso', '{{ ingreso.categoria.tipo }}')"
+                   title="Ver tipo completo">
+                <span class="badge-tipo {{ ingreso.categoria.tipo }}">
+                  {{ ingreso.categoria.tipo|truncate(8) }}
+                </span>
+              </div>
             </td>
 
-
-              <!-- Celda de acciones más compacta -->
+            <!-- Columna ACCIONES -->
             <td class="sticky-actions acciones-cell">
               <div class="acciones-compactas">
                 <a href="/ingresos/editar/{{ ingreso.id }}" class="btn-icon-edit" title="Editar">
@@ -146,6 +165,37 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Modal para texto completo -->
+  <div id="text-modal" class="text-modal">
+    <div class="text-modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button onclick="closeTextModal()" class="modal-close">
+          &times;
+        </button>
+      </div>
+      
+      <div id="modal-content" class="modal-text-display"></div>
+      
+      <div class="modal-actions">
+        <button onclick="copyFromModal()" class="btn-modal-copy">
+          <i class="bi bi-copy"></i> Copiar
+        </button>
+        <button onclick="closeTextModal()" class="btn-modal-close">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div id="copy-toast" class="copy-toast">
+    <div class="toast-content">
+      <i class="bi bi-check-circle-fill"></i>
+      <span id="toast-text"></span>
     </div>
   </div>
 
@@ -238,6 +288,73 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }, 4000);
   }
+
+  // Función para copiar texto
+  window.copiarAlPortapapeles = function(texto, tipo, elemento) {
+    if (!texto || texto === '-' || texto === '••••••••') return;
+    
+    navigator.clipboard.writeText(texto).then(() => {
+      const toast = document.getElementById('copy-toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = `${tipo} copiado`;
+      toast.classList.add('show');
+      
+      if (elemento) {
+        elemento.classList.add('copied');
+        setTimeout(() => elemento.classList.remove('copied'), 1000);
+      }
+      
+      setTimeout(() => toast.classList.remove('show'), 2000);
+      
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo copiar al portapapeles',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
+    });
+  };
+  
+  // Abrir modal para texto completo
+  window.openTextModal = function(titulo, contenido) {
+    const modal = document.getElementById('text-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    
+    modalTitle.textContent = titulo;
+    modalContent.textContent = contenido;
+    
+    modal.style.display = 'flex';
+  };
+  
+  // Cerrar modal
+  window.closeTextModal = function() {
+    document.getElementById('text-modal').style.display = 'none';
+  };
+  
+  // Copiar del modal
+  window.copyFromModal = function() {
+    const content = document.getElementById('modal-content');
+    const text = content.textContent || content.innerText;
+    const titulo = document.getElementById('modal-title').textContent;
+    copiarAlPortapapeles(text, titulo, null);
+  };
+  
+  // Cerrar modal con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeTextModal();
+    }
+  });
+  
+  // Cerrar modal al hacer clic fuera
+  document.getElementById('text-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTextModal();
+    }
+  });
 });
 </script>
 {% endblock %}

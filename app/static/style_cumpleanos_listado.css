@@ -130,7 +130,7 @@
    SCROLL HINT (igual que ingresos)
    ========================= */
 .scroll-hint {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #ec4899, #db2777);
   color: white;
   padding: 0.6rem 1rem;
   border-radius: 8px;
@@ -144,6 +144,12 @@
   gap: 0.5rem;
   animation: pulse 2s infinite;
   transition: opacity 0.3s;
+  cursor: pointer;
+  user-select: none;
+}
+
+.scroll-hint:hover {
+  opacity: 0.9;
 }
 
 @keyframes pulse {
@@ -170,6 +176,7 @@
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .tabla-scroll {
@@ -178,11 +185,12 @@
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   position: relative;
+  width: 100%;
 }
 
 /* Scrollbar personalizada */
 .tabla-scroll::-webkit-scrollbar {
-  height: 8px;
+  height: 10px;
 }
 
 .tabla-scroll::-webkit-scrollbar-track {
@@ -193,6 +201,7 @@
 .tabla-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
+  border: 2px solid #f1f5f9;
 }
 
 .tabla-scroll::-webkit-scrollbar-thumb:hover {
@@ -275,6 +284,9 @@
   z-index: 5;
   background: inherit !important;
   box-shadow: -2px 0 8px rgba(0,0,0,0.06);
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
 }
 
 .tabla-cumpleanos thead .sticky-actions {
@@ -282,32 +294,137 @@
   background: linear-gradient(135deg, #1e293b, #334155) !important;
 }
 
+.acciones-header {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+}
+
 /* =========================
-   CELDAS ESPECÍFICAS
+   ANCHOS DE COLUMNAS PC
    ========================= */
-.nombre-cell {
-  font-weight: 600;
-  color: var(--text);
+.col-nombre {
+  width: 180px;
   max-width: 180px;
 }
 
-.fecha-cell {
-  color: var(--text-light);
-  font-size: 0.85rem;
+.col-fecha-nac {
+  width: 90px;
+  max-width: 90px;
+}
+
+.col-edad {
+  width: 90px;
+  max-width: 90px;
+}
+
+.col-proximo {
+  width: 100px;
+  max-width: 100px;
+}
+
+.col-dias {
+  width: 110px;
+  max-width: 110px;
+}
+
+.col-relacion {
+  width: 100px;
+  max-width: 100px;
+}
+
+/* =========================
+   CONTENIDO COMPACTO CON MODAL
+   ========================= */
+
+/* Nombre */
+.nombre-compacto {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  padding: 5px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.edad-cell {
+.nombre-compacto:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Fecha de nacimiento */
+.fecha-nac-compacta {
+  cursor: pointer;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  padding: 5px 0;
+}
+
+.fecha-nac-compacta:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Edad */
+.edad-compacta {
+  cursor: pointer;
   font-weight: 700;
   color: var(--text);
   font-size: 1rem;
   white-space: nowrap;
+  padding: 5px 0;
 }
 
-.proximo-cell {
+.edad-compacta:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Próximo cumple */
+.proximo-compacto {
+  cursor: pointer;
   color: var(--text-light);
   font-size: 0.85rem;
   white-space: nowrap;
+  padding: 5px 0;
+}
+
+.proximo-compacto:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Días restantes */
+.dias-compacto {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.dias-compacto:hover .dias-badge {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Relación */
+.relacion-compacta {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.relacion-compacta:hover .relacion-badge {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Sin datos */
+.sin-datos {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.85rem;
 }
 
 /* =========================
@@ -324,6 +441,8 @@
   white-space: nowrap;
   background: #d1fae5;
   color: #065f46;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 }
 
 .dias-badge.hoy {
@@ -346,6 +465,8 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   white-space: nowrap;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 }
 
 .relacion-badge.familia {
@@ -374,17 +495,20 @@
 }
 
 /* =========================
-   ACCIONES (igual que ingresos)
+   ACCIONES COMPACTAS (igual que ingresos)
    ========================= */
-.acciones {
+.acciones-compactas {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
   justify-content: center;
+  align-items: center;
+  padding: 0;
 }
 
-.btn-icon {
-  width: 36px;
-  height: 36px;
+.btn-icon-edit,
+.btn-icon-delete {
+  width: 30px !important;
+  height: 30px !important;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -393,22 +517,35 @@
   text-decoration: none;
   transition: all 0.2s;
   cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
 }
 
-.btn-icon.edit {
+.btn-icon-edit {
   background: var(--primary);
 }
 
-.btn-icon.delete {
+.btn-icon-delete {
   background: var(--danger);
 }
 
-.btn-icon:active {
+.btn-icon-edit:active,
+.btn-icon-delete:active {
   transform: scale(0.9);
 }
 
-.btn-icon i {
-  font-size: 0.85rem;
+.btn-icon-edit i,
+.btn-icon-delete i {
+  font-size: 0.7rem !important;
+}
+
+.acciones-cell {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+  text-align: center;
 }
 
 /* =========================
@@ -426,6 +563,165 @@
   display: block;
   margin-bottom: 0.5rem;
   opacity: 0.5;
+}
+
+/* =========================
+   MODALES (NUEVO)
+   ========================= */
+.text-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.text-modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: var(--text-light);
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: var(--danger);
+}
+
+.modal-text-display {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 15px 0;
+  border: 1px solid #e9ecef;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.btn-modal-copy,
+.btn-modal-close {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  min-height: 38px;
+  min-width: 80px;
+}
+
+.btn-modal-copy {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-modal-copy:hover {
+  background: var(--primary-dark);
+}
+
+.btn-modal-close {
+  background: #e9ecef;
+  color: var(--text);
+}
+
+.btn-modal-close:hover {
+  background: #dee2e6;
+}
+
+/* Toast de notificación */
+.copy-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--success);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1100;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.copy-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-content i {
+  font-size: 1.2rem;
 }
 
 /* =========================
@@ -507,6 +803,36 @@
   .tabla-cumpleanos td {
     padding: 0.8rem;
   }
+  
+  .col-nombre {
+    width: 150px;
+    max-width: 150px;
+  }
+
+  .col-fecha-nac {
+    width: 85px;
+    max-width: 85px;
+  }
+
+  .col-edad {
+    width: 85px;
+    max-width: 85px;
+  }
+
+  .col-proximo {
+    width: 95px;
+    max-width: 95px;
+  }
+
+  .col-dias {
+    width: 105px;
+    max-width: 105px;
+  }
+
+  .col-relacion {
+    width: 95px;
+    max-width: 95px;
+  }
 }
 
 /* =========================
@@ -527,7 +853,14 @@
   }
 
   .btn-nuevo {
-    padding: 0.65rem 1.1rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    min-height: unset;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  }
+
+  .btn-nuevo i {
     font-size: 0.85rem;
   }
 
@@ -547,7 +880,7 @@
 
   /* Scroll hint más pequeño */
   .scroll-hint {
-    padding: 0.5rem 0.85rem;
+    padding: 0.6rem 1rem;
     font-size: 0.8rem;
     margin-bottom: 0.65rem;
   }
@@ -559,40 +892,112 @@
   }
 
   .tabla-cumpleanos th {
-    padding: 0.75rem 0.65rem;
-    font-size: 0.7rem;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.6rem;
   }
 
   .tabla-cumpleanos td {
-    padding: 0.7rem 0.65rem;
+    padding: 0.5rem 0.25rem;
   }
 
-  .nombre-cell {
-    max-width: 140px;
-    font-size: 0.85rem;
+  /* Desactivar sticky en móviles */
+  .sticky-col,
+  .sticky-actions {
+    position: static !important;
+    box-shadow: none !important;
+    background: inherit !important;
   }
 
-  .edad-cell {
-    font-size: 0.9rem;
+  .tabla-cumpleanos thead .sticky-col,
+  .tabla-cumpleanos thead .sticky-actions {
+    position: static !important;
+    background: linear-gradient(135deg, #1e293b, #334155) !important;
+  }
+
+  /* ANCHOS MÓVIL - COMPACTOS */
+  .col-nombre {
+    width: 120px;
+    max-width: 120px;
+  }
+
+  .col-fecha-nac {
+    width: 70px;
+    max-width: 70px;
+  }
+
+  .col-edad {
+    width: 70px;
+    max-width: 70px;
+  }
+
+  .col-proximo {
+    width: 80px;
+    max-width: 80px;
+  }
+
+  .col-dias {
+    width: 90px;
+    max-width: 90px;
+  }
+
+  .col-relacion {
+    width: 80px;
+    max-width: 80px;
+  }
+
+  .nombre-compacto,
+  .fecha-nac-compacta,
+  .proximo-compacto {
+    font-size: 0.7rem;
+  }
+
+  .edad-compacta {
+    font-size: 0.75rem;
   }
 
   .dias-badge {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     padding: 4px 10px;
   }
 
   .relacion-badge {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     padding: 3px 8px;
   }
-
-  .btn-icon {
-    width: 34px;
-    height: 34px;
+  
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+    padding-left: 0.2rem !important;
+    padding-right: 0.2rem !important;
+  }
+  
+  .acciones-header {
+    font-size: 0.6rem !important;
+  }
+  
+  .acciones-compactas {
+    gap: 0.2rem;
+  }
+  
+  .btn-icon-edit,
+  .btn-icon-delete {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px;
+    min-height: 26px;
+  }
+  
+  .btn-icon-edit i,
+  .btn-icon-delete i {
+    font-size: 0.6rem !important;
   }
 
-  .btn-icon i {
-    font-size: 0.8rem;
+  .tabla-scroll::-webkit-scrollbar {
+    height: 10px;
   }
 
   /* Paginación móvil */
@@ -635,8 +1040,8 @@
   }
 
   .btn-nuevo {
-    padding: 0.6rem 1rem;
-    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
   }
 
   .tabla-cumpleanos {
@@ -644,16 +1049,134 @@
   }
 
   .tabla-cumpleanos th {
-    padding: 0.65rem 0.5rem;
+    padding: 0.45rem 0.2rem;
+    font-size: 0.55rem;
   }
 
   .tabla-cumpleanos td {
-    padding: 0.65rem 0.5rem;
+    padding: 0.45rem 0.2rem;
+  }
+
+  .col-nombre {
+    width: 110px;
+    max-width: 110px;
+  }
+
+  .col-fecha-nac {
+    width: 65px;
+    max-width: 65px;
+  }
+
+  .col-edad {
+    width: 65px;
+    max-width: 65px;
+  }
+
+  .col-proximo {
+    width: 75px;
+    max-width: 75px;
+  }
+
+  .col-dias {
+    width: 85px;
+    max-width: 85px;
+  }
+
+  .col-relacion {
+    width: 75px;
+    max-width: 75px;
   }
 
   .scroll-hint {
     font-size: 0.75rem;
     padding: 0.45rem 0.75rem;
+  }
+}
+
+/* =========================
+   RESPONSIVE - MÓVIL MUY PEQUEÑO (360px)
+   ========================= */
+@media (max-width: 360px) {
+  .tabla-cumpleanos {
+    min-width: 650px;
+  }
+  
+  .tabla-cumpleanos th {
+    padding: 0.4rem 0.15rem;
+    font-size: 0.5rem;
+  }
+  
+  .tabla-cumpleanos td {
+    padding: 0.4rem 0.15rem;
+  }
+
+  .col-nombre {
+    width: 100px;
+    max-width: 100px;
+  }
+
+  .col-fecha-nac {
+    width: 60px;
+    max-width: 60px;
+  }
+
+  .col-edad {
+    width: 60px;
+    max-width: 60px;
+  }
+
+  .col-proximo {
+    width: 70px;
+    max-width: 70px;
+  }
+
+  .col-dias {
+    width: 80px;
+    max-width: 80px;
+  }
+
+  .col-relacion {
+    width: 70px;
+    max-width: 70px;
+  }
+
+  .nombre-compacto,
+  .fecha-nac-compacta,
+  .proximo-compacto {
+    font-size: 0.65rem;
+  }
+
+  .edad-compacta {
+    font-size: 0.7rem;
+  }
+
+  .dias-badge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+
+  .relacion-badge {
+    font-size: 0.55rem;
+    padding: 2px 6px;
+  }
+
+  .sticky-actions,
+  .acciones-header,
+  .acciones-cell {
+    width: 65px !important;
+    min-width: 65px !important;
+    max-width: 65px !important;
+  }
+
+  .btn-icon-edit,
+  .btn-icon-delete {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .btn-icon-edit i,
+  .btn-icon-delete i {
+    font-size: 0.55rem !important;
   }
 }
 
@@ -682,27 +1205,20 @@
 
 /* Touch targets mínimos */
 @media (hover: none) and (pointer: coarse) {
-  .btn-icon,
+  .btn-icon-edit,
+  .btn-icon-delete {
+    min-width: 26px !important;
+    min-height: 26px !important;
+  }
+  
   .btn-nuevo,
   .pag-btn {
     min-width: 44px;
     min-height: 44px;
   }
-}
-
-/* =========================
-   AJUSTE BOTÓN NUEVO - MOBILE
-   ========================= */
-@media (max-width: 768px) {
-  .btn-nuevo {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.75rem;
-    border-radius: 8px;
-    min-height: unset;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-  }
-
-  .btn-nuevo i {
-    font-size: 0.85rem;
+  
+  .tabla-scroll {
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 5px;
   }
 }

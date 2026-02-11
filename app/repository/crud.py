@@ -1050,105 +1050,105 @@ def actualizar_credito(db: Session, credito_id: int, credito: schemas.CreditoUpd
     return db_credito
 
 
-def actualizar_credito(db: Session, credito_id: int, credito: schemas.CreditoUpdate, usuario_id: int):
-    """Actualiza un crédito existente - VERSIÓN CORREGIDA"""
-    db_credito = obtener_credito(db, credito_id)
-    if not db_credito or db_credito.usuario_id != usuario_id:
-        return None
+# def actualizar_credito(db: Session, credito_id: int, credito: schemas.CreditoUpdate, usuario_id: int):
+#     """Actualiza un crédito existente - VERSIÓN CORREGIDA"""
+#     db_credito = obtener_credito(db, credito_id)
+#     if not db_credito or db_credito.usuario_id != usuario_id:
+#         return None
     
-    # ✅ CORREGIDO: Inicializar variables
-    recalcular_total = False
-    cuota_a_usar = db_credito.cuota
-    ha_cambiado_cuota_manual = False
+#     # ✅ CORREGIDO: Inicializar variables
+#     recalcular_total = False
+#     cuota_a_usar = db_credito.cuota
+#     ha_cambiado_cuota_manual = False
     
-    # 🔹 1. Si cambia la cuota manual
-    if credito.cuota_manual is not None:
-        db_credito.cuota_manual = credito.cuota_manual
-        ha_cambiado_cuota_manual = True
+#     # 🔹 1. Si cambia la cuota manual
+#     if credito.cuota_manual is not None:
+#         db_credito.cuota_manual = credito.cuota_manual
+#         ha_cambiado_cuota_manual = True
         
-        if credito.cuota_manual > 0:
-            # MODO MANUAL: Usar valor del banco
-            cuota_a_usar = credito.cuota_manual
-            print(f"🏦 Actualizando a CUOTA MANUAL: ${cuota_a_usar:,.2f}")
-        else:
-            # MODO CÁLCULO: Volver a calcular
-            cuota_a_usar = calcular_cuota_credito(
-                db_credito.monto, db_credito.interes, 
-                db_credito.plazo_meses, db_credito.frecuencia_pago
-            )
-            print(f"📐 Volviendo a CÁLCULO AUTOMÁTICO: ${cuota_a_usar:,.2f}")
+#         if credito.cuota_manual > 0:
+#             # MODO MANUAL: Usar valor del banco
+#             cuota_a_usar = credito.cuota_manual
+#             print(f"🏦 Actualizando a CUOTA MANUAL: ${cuota_a_usar:,.2f}")
+#         else:
+#             # MODO CÁLCULO: Volver a calcular
+#             cuota_a_usar = calcular_cuota_credito(
+#                 db_credito.monto, db_credito.interes, 
+#                 db_credito.plazo_meses, db_credito.frecuencia_pago
+#             )
+#             print(f"📐 Volviendo a CÁLCULO AUTOMÁTICO: ${cuota_a_usar:,.2f}")
         
-        recalcular_total = True
-        db_credito.cuota = cuota_a_usar
+#         recalcular_total = True
+#         db_credito.cuota = cuota_a_usar
     
-    # 🔹 2. Si cambian parámetros de cálculo (monto, interés, plazo, frecuencia)
-    parametros_modificados = any([
-        credito.monto is not None,
-        credito.interes is not None,
-        credito.plazo_meses is not None,
-        credito.frecuencia_pago is not None
-    ])
+#     # 🔹 2. Si cambian parámetros de cálculo (monto, interés, plazo, frecuencia)
+#     parametros_modificados = any([
+#         credito.monto is not None,
+#         credito.interes is not None,
+#         credito.plazo_meses is not None,
+#         credito.frecuencia_pago is not None
+#     ])
     
-    if parametros_modificados and not ha_cambiado_cuota_manual:
-        # Determinar valores nuevos o mantener actuales
-        monto = credito.monto if credito.monto is not None else db_credito.monto
-        interes = credito.interes if credito.interes is not None else db_credito.interes
-        plazo = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
-        frecuencia = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
+#     if parametros_modificados and not ha_cambiado_cuota_manual:
+#         # Determinar valores nuevos o mantener actuales
+#         monto = credito.monto if credito.monto is not None else db_credito.monto
+#         interes = credito.interes if credito.interes is not None else db_credito.interes
+#         plazo = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
+#         frecuencia = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
         
-        # ¿Usar cuota manual existente o recalcular?
-        if db_credito.cuota_manual and db_credito.cuota_manual > 0:
-            # Mantener cuota manual (no recalcular aunque cambien parámetros)
-            cuota_a_usar = db_credito.cuota_manual
-            print(f"📌 Manteniendo CUOTA MANUAL existente: ${cuota_a_usar:,.2f}")
-        else:
-            # Calcular nueva cuota
-            cuota_a_usar = calcular_cuota_credito(monto, interes, plazo, frecuencia)
-            print(f"🔄 Recalculando cuota: ${cuota_a_usar:,.2f}")
+#         # ¿Usar cuota manual existente o recalcular?
+#         if db_credito.cuota_manual and db_credito.cuota_manual > 0:
+#             # Mantener cuota manual (no recalcular aunque cambien parámetros)
+#             cuota_a_usar = db_credito.cuota_manual
+#             print(f"📌 Manteniendo CUOTA MANUAL existente: ${cuota_a_usar:,.2f}")
+#         else:
+#             # Calcular nueva cuota
+#             cuota_a_usar = calcular_cuota_credito(monto, interes, plazo, frecuencia)
+#             print(f"🔄 Recalculando cuota: ${cuota_a_usar:,.2f}")
         
-        recalcular_total = True
-        db_credito.cuota = cuota_a_usar
+#         recalcular_total = True
+#         db_credito.cuota = cuota_a_usar
     
-    # 🔹 3. Recalcular total_pagar si es necesario
-    if recalcular_total or credito.seguro is not None:
-        # Determinar número de cuotas según frecuencia
-        frecuencia_actual = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
-        plazo_actual = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
+#     # 🔹 3. Recalcular total_pagar si es necesario
+#     if recalcular_total or credito.seguro is not None:
+#         # Determinar número de cuotas según frecuencia
+#         frecuencia_actual = credito.frecuencia_pago if credito.frecuencia_pago is not None else db_credito.frecuencia_pago
+#         plazo_actual = credito.plazo_meses if credito.plazo_meses is not None else db_credito.plazo_meses
         
-        if frecuencia_actual == 'quincenal':
-            total_cuotas = plazo_actual * 2
-        elif frecuencia_actual == 'semanal':
-            total_cuotas = plazo_actual * 4
-        elif frecuencia_actual == 'diario':
-            total_cuotas = plazo_actual * 30
-        else:
-            total_cuotas = plazo_actual
+#         if frecuencia_actual == 'quincenal':
+#             total_cuotas = plazo_actual * 2
+#         elif frecuencia_actual == 'semanal':
+#             total_cuotas = plazo_actual * 4
+#         elif frecuencia_actual == 'diario':
+#             total_cuotas = plazo_actual * 30
+#         else:
+#             total_cuotas = plazo_actual
         
-        # Determinar seguro actual
-        seguro_actual = credito.seguro if credito.seguro is not None else db_credito.seguro
+#         # Determinar seguro actual
+#         seguro_actual = credito.seguro if credito.seguro is not None else db_credito.seguro
         
-        # Calcular total a pagar
-        db_credito.total_pagar = (cuota_a_usar + seguro_actual) * total_cuotas
+#         # Calcular total a pagar
+#         db_credito.total_pagar = (cuota_a_usar + seguro_actual) * total_cuotas
     
-    # 🔹 4. Actualizar otros campos
-    for key, value in credito.model_dump(exclude_unset=True).items():
-        if key not in ['cuota', 'total_pagar', 'cuota_manual']:  # Estos ya los manejamos
-            setattr(db_credito, key, value)
+#     # 🔹 4. Actualizar otros campos
+#     for key, value in credito.model_dump(exclude_unset=True).items():
+#         if key not in ['cuota', 'total_pagar', 'cuota_manual']:  # Estos ya los manejamos
+#             setattr(db_credito, key, value)
     
-    # 🔹 5. Recalcular cuota_calculada (siempre)
-    db_credito.cuota_calculada = calcular_cuota_credito(
-        db_credito.monto, db_credito.interes, 
-        db_credito.plazo_meses, db_credito.frecuencia_pago
-    )
+#     # 🔹 5. Recalcular cuota_calculada (siempre)
+#     db_credito.cuota_calculada = calcular_cuota_credito(
+#         db_credito.monto, db_credito.interes, 
+#         db_credito.plazo_meses, db_credito.frecuencia_pago
+#     )
     
-    db.commit()
-    db.refresh(db_credito)
+#     db.commit()
+#     db.refresh(db_credito)
     
-    print(f"✅ Crédito actualizado")
-    print(f"   Cuota real: ${db_credito.cuota:,.2f}")
-    print(f"   Cuota calculada: ${db_credito.cuota_calculada:,.2f}")
+#     print(f"✅ Crédito actualizado")
+#     print(f"   Cuota real: ${db_credito.cuota:,.2f}")
+#     print(f"   Cuota calculada: ${db_credito.cuota_calculada:,.2f}")
     
-    return db_credito
+#     return db_credito
 
 
 def eliminar_credito(db: Session, credito_id: int, usuario_id: int):
@@ -1162,7 +1162,121 @@ def eliminar_credito(db: Session, credito_id: int, usuario_id: int):
     return True
 
 
+# ============================================================================
+# 💰 FUNCIONES DE PAGOS - AGREGAR EN crud.py
+# ============================================================================
 
+def obtener_pagos_por_credito(db: Session, credito_id: int):
+    """Obtiene todos los pagos de un crédito específico"""
+    try:
+        pagos = db.query(models.Pago).filter(
+            models.Pago.credito_id == credito_id
+        ).order_by(models.Pago.fecha_pago.desc()).all()
+        
+        print(f"✅ Pagos encontrados para crédito {credito_id}: {len(pagos)}")
+        return pagos
+    except Exception as e:
+        print(f"❌ Error al obtener pagos: {e}")
+        return []
+
+def crear_pago(db: Session, pago: schemas.PagoCreate, usuario_id: int):
+    """Crea un nuevo pago para un crédito"""
+    try:
+        # Verificar que el crédito existe y pertenece al usuario
+        credito = db.query(models.Credito).filter(
+            models.Credito.id == pago.credito_id,
+            models.Credito.usuario_id == usuario_id
+        ).first()
+        
+        if not credito:
+            print(f"❌ Crédito {pago.credito_id} no encontrado")
+            return None
+        
+        # ✅ CONVERTIR float A Decimal para la base de datos
+        from decimal import Decimal
+        
+        # Crear el pago CON DECIMAL
+        db_pago = models.Pago(
+            credito_id=pago.credito_id,
+            monto=Decimal(str(pago.monto)),  # Convertir a Decimal
+            fecha_pago=pago.fecha_pago,
+            comprobante=pago.comprobante,
+            notas=pago.notas
+        )
+        
+        db.add(db_pago)
+        
+        # Actualizar saldo del crédito
+        credito.saldo_actual = float(credito.saldo_actual) - pago.monto
+        
+        # Si el saldo llega a 0 o menos, marcar como pagado
+        if credito.saldo_actual <= 0:
+            credito.estado = 'pagado'
+            credito.saldo_actual = 0
+        
+        db.commit()
+        db.refresh(db_pago)
+        
+        print(f"✅ Pago creado ID: {db_pago.id} por ${pago.monto:,.2f}")
+        return db_pago
+        
+    except Exception as e:
+        print(f"❌ Error al crear pago: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return None
+
+def eliminar_pago(db: Session, pago_id: int, usuario_id: int):
+    """Elimina un pago y actualiza el saldo del crédito"""
+    try:
+        # Obtener el pago con el crédito relacionado
+        pago = db.query(models.Pago).filter(
+            models.Pago.id == pago_id
+        ).first()
+        
+        if not pago:
+            print(f"❌ Pago {pago_id} no encontrado")
+            return False
+        
+        # Verificar que el crédito pertenece al usuario
+        credito = db.query(models.Credito).filter(
+            models.Credito.id == pago.credito_id,
+            models.Credito.usuario_id == usuario_id
+        ).first()
+        
+        if not credito:
+            print(f"❌ Crédito {pago.credito_id} no encontrado o no pertenece al usuario")
+            return False
+        
+        print(f"\n=== ELIMINANDO PAGO ID: {pago_id} ===")
+        print(f"  Monto del pago: ${pago.monto}")
+        print(f"  Saldo actual antes: ${credito.saldo_actual:,.2f}")
+        
+        # ✅ CORREGIDO: Convertir Decimal a Float para la operación
+        monto_pago = float(pago.monto)
+        credito.saldo_actual = float(credito.saldo_actual) + monto_pago
+        
+        # Si el crédito estaba pagado, volver a activo
+        if credito.estado == 'pagado' and credito.saldo_actual > 0:
+            credito.estado = 'activo'
+            print(f"  Estado cambiado de 'pagado' a 'activo'")
+        
+        print(f"  Saldo actual después: ${credito.saldo_actual:,.2f}")
+        
+        # Eliminar el pago
+        db.delete(pago)
+        db.commit()
+        
+        print(f"✅ Pago {pago_id} eliminado exitosamente")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar pago: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return False
 # ============================================================================
 # 📇 FUNCIONES DE CONTACTOS
 # ============================================================================

@@ -47,71 +47,99 @@
       <table class="tabla-cumpleanos">
         <thead>
           <tr>
-            <th class="sticky-col">Nombre</th>
-            <th>F/Nac</th>
-            <th>Edad que cumplirá</th>
-            <th>Próx. Cumple</th>
-            <th>Días restantes</th>
-            <th>Relación</th>
-            <th class="sticky-actions">Acciones</th>
+            <th class="sticky-col col-nombre">Nombre</th>
+            <th class="col-fecha-nac">F/Nac</th>
+            <th class="col-edad">Edad que cumplirá</th>
+            <th class="col-proximo">Próx. Cumple</th>
+            <th class="col-dias">Días restantes</th>
+            <th class="col-relacion">Relación</th>
+            <th class="sticky-actions acciones-header">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% for cumple in cumpleanos %}
           <tr class="{% if cumple.dias_hasta_cumpleanos <= 7 %}proximo{% endif %}">
-            <!-- Nombre (columna sticky) -->
-            <td class="sticky-col nombre-cell">
-              {{ cumple.nombre_persona }}
+            
+            <!-- Columna NOMBRE (columna sticky) -->
+            <td class="sticky-col col-nombre">
+              <div class="nombre-compacto"
+                   onclick="openTextModal('Nombre', '{{ cumple.nombre_persona }}')"
+                   title="Ver nombre completo">
+                {{ cumple.nombre_persona|truncate(15) }}
+              </div>
             </td>
             
-            <!-- Fecha de nacimiento -->
-            <td class="fecha-cell">
-              {{ cumple.fecha_nacimiento.strftime('%d/%m/%Y') }}
+            <!-- Columna FECHA DE NACIMIENTO -->
+            <td class="col-fecha-nac">
+              <div class="fecha-nac-compacta"
+                   onclick="openTextModal('Fecha de Nacimiento', '{{ cumple.fecha_nacimiento.strftime('%d/%m/%Y') }}')"
+                   title="Ver fecha completa">
+                {{ cumple.fecha_nacimiento.strftime('%d/%m/%y') }}
+              </div>
             </td>
             
-            <!-- Edad -->
-            <td class="edad-cell">
-              {{ cumple.edad }} años
+            <!-- Columna EDAD -->
+            <td class="col-edad">
+              <div class="edad-compacta"
+                   onclick="openTextModal('Edad que cumplirá', '{{ cumple.edad }} años')"
+                   title="Ver edad">
+                {{ cumple.edad }} años
+              </div>
             </td>
             
-            <!-- Próximo cumpleaños -->
-            <td class="proximo-cell">
-              {{ cumple.proximo_cumple.strftime('%d/%m/%Y') }}
+            <!-- Columna PRÓXIMO CUMPLEAÑOS -->
+            <td class="col-proximo">
+              <div class="proximo-compacto"
+                   onclick="openTextModal('Próximo Cumpleaños', '{{ cumple.proximo_cumple.strftime('%d/%m/%Y') }}')"
+                   title="Ver fecha completa">
+                {{ cumple.proximo_cumple.strftime('%d/%m/%y') }}
+              </div>
             </td>
             
-            <!-- Días restantes -->
-            <td>
-              <span class="dias-badge {% if cumple.dias_hasta_cumpleanos == 0 %}hoy{% elif cumple.dias_hasta_cumpleanos <= 7 %}proximo{% endif %}">
-                {% if cumple.dias_hasta_cumpleanos == 0 %}
-                  🎉 ¡HOY!
-                {% elif cumple.dias_hasta_cumpleanos == 1 %}
-                  Mañana
+            <!-- Columna DÍAS RESTANTES -->
+            <td class="col-dias">
+              <div class="dias-compacto"
+                   onclick="openTextModal('Días restantes para el cumpleaños', 
+                            '{% if cumple.dias_hasta_cumpleanos == 0 %}🎉 ¡HOY ES SU CUMPLEAÑOS!{% elif cumple.dias_hasta_cumpleanos == 1 %}Falta 1 día (mañana){% else %}Faltan {{ cumple.dias_hasta_cumpleanos }} días{% endif %}')"
+                   title="Ver días restantes">
+                <span class="dias-badge {% if cumple.dias_hasta_cumpleanos == 0 %}hoy{% elif cumple.dias_hasta_cumpleanos <= 7 %}proximo{% endif %}">
+                  {% if cumple.dias_hasta_cumpleanos == 0 %}
+                    🎉 ¡HOY!
+                  {% elif cumple.dias_hasta_cumpleanos == 1 %}
+                    Mañana
+                  {% else %}
+                    En {{ cumple.dias_hasta_cumpleanos }} días
+                  {% endif %}
+                </span>
+              </div>
+            </td>
+            
+            <!-- Columna RELACIÓN -->
+            <td class="col-relacion">
+              <div class="relacion-compacta"
+                   onclick="openTextModal('Relación', '{{ cumple.relacion or "Sin relación especificada" }}')"
+                   title="Ver relación">
+                {% if cumple.relacion %}
+                  <span class="relacion-badge {{ cumple.relacion|lower }}">
+                    {{ cumple.relacion|truncate(8) }}
+                  </span>
                 {% else %}
-                  En {{ cumple.dias_hasta_cumpleanos }} días
+                  -
                 {% endif %}
-              </span>
+              </div>
             </td>
             
-            <!-- Relación -->
-            <td>
-              {% if cumple.relacion %}
-                <span class="relacion-badge {{ cumple.relacion|lower }}">{{ cumple.relacion }}</span>
-              {% else %}
-                -
-              {% endif %}
-            </td>
-            
-            <!-- Acciones (columna sticky) -->
-            <td class="sticky-actions">
-              <div class="acciones">
-                <a href="/cumpleanos/editar/{{ cumple.id }}" class="btn-icon edit" title="Editar">
-                  <i class="bi bi-pencil-fill"></i>
+            <!-- Columna ACCIONES (columna sticky) -->
+            <td class="sticky-actions acciones-cell">
+              <div class="acciones-compactas">
+                <a href="/cumpleanos/editar/{{ cumple.id }}" class="btn-icon-edit" title="Editar">
+                  <i class="bi bi-pencil"></i>
                 </a>
                 <a href="/cumpleanos/eliminar/{{ cumple.id }}" 
-                   class="btn-icon delete eliminar-btn" 
+                   class="btn-icon-delete eliminar-btn" 
                    data-id="{{ cumple.id }}"
                    title="Eliminar">
-                  <i class="bi bi-trash-fill"></i>
+                  <i class="bi bi-trash"></i>
                 </a>
               </div>
             </td>
@@ -125,6 +153,37 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Modal para texto completo -->
+  <div id="text-modal" class="text-modal">
+    <div class="text-modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button onclick="closeTextModal()" class="modal-close">
+          &times;
+        </button>
+      </div>
+      
+      <div id="modal-content" class="modal-text-display"></div>
+      
+      <div class="modal-actions">
+        <button onclick="copyFromModal()" class="btn-modal-copy">
+          <i class="bi bi-copy"></i> Copiar
+        </button>
+        <button onclick="closeTextModal()" class="btn-modal-close">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div id="copy-toast" class="copy-toast">
+    <div class="toast-content">
+      <i class="bi bi-check-circle-fill"></i>
+      <span id="toast-text"></span>
     </div>
   </div>
 
@@ -220,6 +279,73 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }, 4000);
   }
+
+  // Función para copiar texto
+  window.copiarAlPortapapeles = function(texto, tipo, elemento) {
+    if (!texto || texto === '-' || texto === '••••••••') return;
+    
+    navigator.clipboard.writeText(texto).then(() => {
+      const toast = document.getElementById('copy-toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.textContent = `${tipo} copiado`;
+      toast.classList.add('show');
+      
+      if (elemento) {
+        elemento.classList.add('copied');
+        setTimeout(() => elemento.classList.remove('copied'), 1000);
+      }
+      
+      setTimeout(() => toast.classList.remove('show'), 2000);
+      
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo copiar al portapapeles',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
+    });
+  };
+  
+  // Abrir modal para texto completo
+  window.openTextModal = function(titulo, contenido) {
+    const modal = document.getElementById('text-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    
+    modalTitle.textContent = titulo;
+    modalContent.textContent = contenido;
+    
+    modal.style.display = 'flex';
+  };
+  
+  // Cerrar modal
+  window.closeTextModal = function() {
+    document.getElementById('text-modal').style.display = 'none';
+  };
+  
+  // Copiar del modal
+  window.copyFromModal = function() {
+    const content = document.getElementById('modal-content');
+    const text = content.textContent || content.innerText;
+    const titulo = document.getElementById('modal-title').textContent;
+    copiarAlPortapapeles(text, titulo, null);
+  };
+  
+  // Cerrar modal con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeTextModal();
+    }
+  });
+  
+  // Cerrar modal al hacer clic fuera
+  document.getElementById('text-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTextModal();
+    }
+  });
 });
 </script>
 {% endblock %}
